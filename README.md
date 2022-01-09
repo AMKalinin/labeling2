@@ -8,4 +8,4 @@
 #PyQt5
 
 ### 3. Usage
-python ./start.py
+python ./segflex.py
