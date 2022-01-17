@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
 
 import segflex_new_project
 import segflex_project_as_object as project
+import os
+import json
 
 class AnyObjects(QObject):
     # создаем свой сигнал
@@ -19,7 +21,38 @@ class main_window(QMainWindow):
         
         self.adjust_main_window()
         self.set_params()
+        #self.check_projects_folder()
         self.create_place_widgets_main_window()
+
+    def check_projects_folder(self):
+        path_dir = os.getcwd()
+        path_dir += "/__projects"
+        if not os.path.exists(path_dir):
+            print("project_folder_created")
+            os.mkdir(path_dir)
+        projects_list = os.listdir(path_dir)
+        print(projects_list)
+        if not projects_list:
+            return
+        for proj in projects_list: #check correct file
+            path_project = path_dir +"/"+ proj
+            f = open(path_project)
+            d = json.load(f)
+            print(d)
+
+            
+            for key, value in d.items():
+                if key == "Name project":
+                    to_project_name = value
+                elif key == "List classes":
+                    to_project_classes = value
+                elif key == "project ID":
+                    to_project_id = value
+            project_widget = project.project_as_object(self)
+            self.layout_SArea.addWidget(project_widget)
+            
+
+        
 
     def set_params(self):
         self.ao = AnyObjects()
@@ -75,9 +108,9 @@ class main_window(QMainWindow):
         
         a1 = project.project_as_object(self)
         a2 = project.project_as_object(self)
-        a3 = project.project_as_object(self)
-        a4 = project.project_as_object(self)
-        a5 = project.project_as_object(self)
+        #a3 = project.project_as_object(self)
+        #a4 = project.project_as_object(self)
+        #a5 = project.project_as_object(self)
 
 
 
@@ -89,11 +122,13 @@ class main_window(QMainWindow):
         self.scrollarea.setWidget(widget)
         self.layout_SArea = QVBoxLayout(widget)
 
+        self.check_projects_folder()
+
         self.layout_SArea.addWidget(a1)
         self.layout_SArea.addWidget(a2)
-        self.layout_SArea.addWidget(a3)
-        self.layout_SArea.addWidget(a4)
-        self.layout_SArea.addWidget(a5)
+        #self.layout_SArea.addWidget(a3)
+        #self.layout_SArea.addWidget(a4)
+        #self.layout_SArea.addWidget(a5)
         widget.setMinimumSize(600, 400)
         #widget.adjustSize()
 
