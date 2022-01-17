@@ -48,7 +48,7 @@ class main_window(QMainWindow):
                     to_project_classes = value
                 elif key == "project ID":
                     to_project_id = value
-            project_widget = project.project_as_widget(self)
+            project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes)
             self.layout_SArea.addWidget(project_widget)
             
 
@@ -106,8 +106,8 @@ class main_window(QMainWindow):
     def create_table(self):
         table = QTabWidget()
         
-        a1 = project.project_as_widget(self)
-        a2 = project.project_as_widget(self)
+        a1 = project.project_as_widget(name="create_table", classes=[1,2,3])
+        a2 = project.project_as_widget(name="create_table", classes=[1,2,3])
         #a3 = project.project_as_widget(self)
         #a4 = project.project_as_widget(self)
         #a5 = project.project_as_widget(self)

@@ -5,14 +5,19 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QScrollArea, QToolButton, QSizePolicy, QComboBox)
 import sys
 """
-class project_as_object(QWidget):
+class project_as_widget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 """
 
 class project_as_widget(QGroupBox):
-    def __init__(self, parent=None):
-        QGroupBox.__init__(self, parent)
+    def __init__(self,
+    name,
+    classes,
+    parent=None,
+    ide=0):
+        #QGroupBox.__init__(self, name, classes, parent, ide)
+        super().__init__()
 
         layout = QHBoxLayout()
         layout_preview = QVBoxLayout()
@@ -33,11 +38,11 @@ class project_as_widget(QGroupBox):
         image.setPixmap(pixmap)
         image.setFixedSize(100, 100)
 
-        info_number = QLabel("#141999: Тест")
+        info_number = QLabel("#" + str(ide) + name)
         info_created_by = QLabel("Created by Hashly on November 1st 2021")
         info_last_update = QLabel("Last updated 15 days ago")
 
-        status = QLabel("Pending")
+        status = QLabel(" ".join(str(classes)))
 
         jobs = QLabel("0 of 1 jobs")
 
@@ -64,7 +69,7 @@ class project_as_widget(QGroupBox):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
-    w = project_as_object()
+    w = project_as_widget()
     w.show()
     sys.exit(app.exec_())
 
