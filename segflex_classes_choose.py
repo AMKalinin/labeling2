@@ -1,19 +1,30 @@
 import sys
 from PyQt5.QtWidgets import (QWidget, QLabel, QDialog,
     QComboBox, QApplication, QListView, QVBoxLayout, QHBoxLayout, QPushButton)
+from PyQt5.QtCore import pyqtSignal, QObject
 
 import segflex_classifier as classifier
+
+class AnyObjects(QObject):
+    # создаем свой сигнал
+    own_signal = pyqtSignal()
 
 
 class classes_choose(QDialog):
     def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
+        QDialog.__init__(self, parent)
         classifier.project_classes.clear()
 
         self.adjust_window()
         self.create_place_combo_boxes()
         self.create_place_choose_buttons()
         self.create_place_control_buttons()
+
+    def on_btn_ok(self, event):
+        # генерируем сигнал
+        self.ao = AnyObjects()
+        self.ao.own_signal.emit()
+        self.close()
 
     def adjust_window(self):
         self.setWindowTitle("Выбор классов проекта")
@@ -115,5 +126,5 @@ class classes_choose(QDialog):
         classes = " ".join(classifier.project_classes)
         self.select_label.setText("Выбрано: " + classes)
 
-    def on_btn_ok(self):
-        pass
+   # def on_btn_ok(self):
+    #    pass
