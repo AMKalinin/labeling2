@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QScrollArea, QToolButton, QSizePolicy, QComboBox)
 
 import segflex_new_project
-import segflex_project_as_object as project
+import segflex_project_as_widget as project
 import os
 import json
 
@@ -48,7 +48,7 @@ class main_window(QMainWindow):
                     to_project_classes = value
                 elif key == "project ID":
                     to_project_id = value
-            project_widget = project.project_as_object(self)
+            project_widget = project.project_as_widget(self)
             self.layout_SArea.addWidget(project_widget)
             
 
@@ -106,11 +106,11 @@ class main_window(QMainWindow):
     def create_table(self):
         table = QTabWidget()
         
-        a1 = project.project_as_object(self)
-        a2 = project.project_as_object(self)
-        #a3 = project.project_as_object(self)
-        #a4 = project.project_as_object(self)
-        #a5 = project.project_as_object(self)
+        a1 = project.project_as_widget(self)
+        a2 = project.project_as_widget(self)
+        #a3 = project.project_as_widget(self)
+        #a4 = project.project_as_widget(self)
+        #a5 = project.project_as_widget(self)
 
 
 
@@ -152,12 +152,12 @@ class main_window(QMainWindow):
         layout1 = QVBoxLayout()
 
 
-        a1 = project.project_as_object(self)
-        a2 = project.project_as_object(self)
-        a3 = project.project_as_object(self)
-        a4 = project.project_as_object(self)
-        a5 = project.project_as_object(self)
-        a6 = project.project_as_object(self)
+        a1 = project.project_as_widget(self)
+        a2 = project.project_as_widget(self)
+        a3 = project.project_as_widget(self)
+        a4 = project.project_as_widget(self)
+        a5 = project.project_as_widget(self)
+        a6 = project.project_as_widget(self)
         
         #tab1.setLayout(layout1)
 
