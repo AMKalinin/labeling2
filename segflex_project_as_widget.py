@@ -4,6 +4,9 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox)
 import sys
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 """
 class project_as_widget(QWidget):
     def __init__(self, parent=None):
@@ -11,6 +14,8 @@ class project_as_widget(QWidget):
 """
 
 class project_as_widget(QGroupBox):
+    Signal_OneParameter = pyqtSignal(str)
+
     def __init__(self,
     name,
     classes,
@@ -46,9 +51,14 @@ class project_as_widget(QGroupBox):
 
         jobs = QLabel("0 of 1 jobs")
 
-        btn_open = QPushButton("Open")
+        self.btn_open = QPushButton("Open")
+        self.btn_delete = QPushButton("Delete")
+        self.btn_delete.clicked.connect(self.emit_delete_signal)
         actions_bar = QComboBox()
         actions_bar.addItems(["do smth1", "do smth2"])
+
+        btn_id_in_layout = QPushButton("print id")
+        #btn_id_in_layout.clicked.connect()
 
 
         layout_preview.addWidget(image)
@@ -57,12 +67,19 @@ class project_as_widget(QGroupBox):
         layout_info.addWidget(info_last_update)
         layout_status.addWidget(status)
         layout_jobs.addWidget(jobs)
-        layout_actions.addWidget(btn_open)
+        layout_actions.addWidget(self.btn_open)
+
+        layout_actions.addWidget(self.btn_delete)
+
         layout_actions.addWidget(actions_bar)
 
 
-
+        self.setMaximumHeight(100)
         self.setLayout(layout)
+
+    def emit_delete_signal(self):
+        #self.Signal_OneParameter.emit("date_str")
+        self.deleteLater()
 
 
 

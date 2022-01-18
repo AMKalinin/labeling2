@@ -10,6 +10,7 @@ import segflex_project_as_widget as project
 import os
 import json
 
+
 class AnyObjects(QObject):
     # создаем свой сигнал
     own_signal = pyqtSignal()
@@ -52,7 +53,13 @@ class main_window(QMainWindow):
             self.layout_SArea.addWidget(project_widget)
             
 
-        
+    def test_create_widget(self):
+        self.project_widget = project.project_as_widget(name="asd", classes=[4,4,4])
+        #self.project_widget.Signal_OneParameter.connect(self.project_widget_signals)
+        self.layout_SArea.addWidget(self.project_widget)
+
+    def project_widget_signals(self):
+        self.project_widget.btn_open.setText("changed")
 
     def set_params(self):
         self.ao = AnyObjects()
@@ -78,6 +85,7 @@ class main_window(QMainWindow):
         self.main_layout.addWidget(button_group, 1, 1)
 
         btn1.clicked.connect(self.on_create_new_project_clicked)
+        btn3.clicked.connect(self.test_create_widget)
 
     def create_button_group_2(self):
         button_group_2 = QGroupBox()
@@ -106,8 +114,8 @@ class main_window(QMainWindow):
     def create_table(self):
         table = QTabWidget()
         
-        a1 = project.project_as_widget(name="create_table", classes=[1,2,3])
-        a2 = project.project_as_widget(name="create_table", classes=[1,2,3])
+        #a1 = project.project_as_widget(name="create_table", classes=[1,2,3])
+        #a2 = project.project_as_widget(name="create_table", classes=[1,2,3])
         #a3 = project.project_as_widget(self)
         #a4 = project.project_as_widget(self)
         #a5 = project.project_as_widget(self)
@@ -122,14 +130,15 @@ class main_window(QMainWindow):
         self.scrollarea.setWidget(widget)
         self.layout_SArea = QVBoxLayout(widget)
 
+
         self.check_projects_folder()
 
-        self.layout_SArea.addWidget(a1)
-        self.layout_SArea.addWidget(a2)
+        #self.layout_SArea.addWidget(a1)
+        #self.layout_SArea.addWidget(a2)
         #self.layout_SArea.addWidget(a3)
         #self.layout_SArea.addWidget(a4)
         #self.layout_SArea.addWidget(a5)
-        widget.setMinimumSize(600, 400)
+        #widget.setMinimumSize(600, 400)# //skukojivaet widgeti 
         #widget.adjustSize()
 
         tab2 = QWidget()
