@@ -5,12 +5,15 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QScrollArea, QToolButton, QSizePolicy)
 
 import segflex_classes_choose
+from PyQt5.QtCore import pyqtSignal
+import segflex_main
 
 
 class new_project_dialog(QDialog): #qformlayout???
+    signal1 = pyqtSignal()
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-
+        #print(segflex_main.ggg)
         self.adjust_window()
         self.create_place_buttons()
 
@@ -47,7 +50,11 @@ class new_project_dialog(QDialog): #qformlayout???
 
     def on_seg_class_choose(self):
         dialog = segflex_classes_choose.classes_choose(self)
+        dialog.signal1.connect(self.gosignal)
         dialog.exec_()
+
+    def gosignal(self):
+        self.signal1.emit()
 
     def on_cancel(self):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)

@@ -9,21 +9,32 @@ import segflex_new_project
 import segflex_project_as_widget as project
 import os
 import json
+import segflex_classifier as classifier
 
 
-class AnyObjects(QObject):
+
+
+#class AnyObjects(QObject):
     # создаем свой сигнал
-    own_signal = pyqtSignal()
-
+#own_signal = pyqtSignal()
+ggg="asd"
 
 class main_window(QMainWindow):
+    signal1 = pyqtSignal(list)
+
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent, flags=QtCore.Qt.Window)
+
+        #super(main_window, self).__init__( parent) #? toje rabotaet
         
+        self.signal1.connect(self.test2_create_widget)
+        self.toprint = "qwewwwwwwwwww"
+
         self.adjust_main_window()
         self.set_params()
         #self.check_projects_folder()
         self.create_place_widgets_main_window()
+        #self.signal1.emit([1,2,3])
 
     def check_projects_folder(self):
         path_dir = os.getcwd()
@@ -53,6 +64,11 @@ class main_window(QMainWindow):
             self.layout_SArea.addWidget(project_widget)
             
 
+    def test2_create_widget(self, srcs_classes=[]):
+        self.project_widget = project.project_as_widget(name="asd", classes=classifier.project_classes)
+        self.layout_SArea.addWidget(self.project_widget)
+
+
     def test_create_widget(self):
         self.project_widget = project.project_as_widget(name="asd", classes=[4,4,4])
         #self.project_widget.Signal_OneParameter.connect(self.project_widget_signals)
@@ -62,9 +78,11 @@ class main_window(QMainWindow):
         self.project_widget.btn_open.setText("changed")
 
     def set_params(self):
-        self.ao = AnyObjects()
+        pass
+        #self.signal1.connect(self.on_clicked)
+        #self.ao = AnyObjects()
         # обработчик сигнала, связанного с объектом
-        self.ao.own_signal.connect(self.on_clicked)
+        #self.ao.own_signal.connect(self.on_clicked)
         # параметры главного окна
 
     def on_clicked(self):
@@ -211,8 +229,10 @@ class main_window(QMainWindow):
         self.main_layout.addWidget(description, 2, 1)
 
     def on_create_new_project_clicked(self):
-        dialog = segflex_new_project.new_project_dialog(self)
-        dialog.exec_()
+        self.dialog = segflex_new_project.new_project_dialog(self)
+        self.dialog.signal1.connect(self.test2_create_widget)
+        #print(self.dialog.toprint)
+        self.dialog.exec_()
 
     def create_place_widgets_main_window(self):
         self.create_button_group()

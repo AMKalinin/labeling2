@@ -11,9 +11,11 @@ class AnyObjects(QObject):
 
 
 class classes_choose(QDialog):
+    signal1 = pyqtSignal()
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         classifier.project_classes.clear()
+        #self.signal1 = pyqtSignal()
 
         self.adjust_window()
         self.create_place_combo_boxes()
@@ -21,10 +23,15 @@ class classes_choose(QDialog):
         self.create_place_control_buttons()
 
     def on_btn_ok(self, event):
+        self.signal1.emit()
+        #pass
+        #self.check_projects_folder()
+        #signal1.emit(classifier.project_classes)
         # генерируем сигнал
-        self.ao = AnyObjects()
-        self.ao.own_signal.emit()
-        self.close()
+        #self.ao = AnyObjects()
+        #self.ao.own_signal.emit()
+        #self.close()
+    
 
     def adjust_window(self):
         self.setWindowTitle("Выбор классов проекта")
