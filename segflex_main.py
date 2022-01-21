@@ -13,13 +13,11 @@ import segflex_classifier as classifier
 
 
 class main_window(QMainWindow):
-    signal1 = pyqtSignal(list)
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent, flags=QtCore.Qt.Window)
 
         #super(main_window, self).__init__( parent) #? toje rabotaet
-        self.signal1.connect(self.test2_create_widget)
 
         self.adjust_main_window()
         #self.check_projects_folder()
@@ -51,6 +49,7 @@ class main_window(QMainWindow):
                     to_project_id = value
             project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes)
             self.layout_SArea.addWidget(project_widget)
+            f.close()
             
 
     def test2_create_widget(self, srcs_classes=[]):

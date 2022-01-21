@@ -7,6 +7,8 @@ import sys
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+import segflex_seg_window as seg_window
+
 """
 class project_as_widget(QWidget):
     def __init__(self, parent=None):
@@ -52,8 +54,11 @@ class project_as_widget(QGroupBox):
         jobs = QLabel("0 of 1 jobs")
 
         self.btn_open = QPushButton("Open")
+
         self.btn_delete = QPushButton("Delete")
         self.btn_delete.clicked.connect(self.emit_delete_signal)
+        self.btn_edit = QPushButton("Edit")
+        self.btn_edit.clicked.connect(self.on_edit)
         actions_bar = QComboBox()
         actions_bar.addItems(["do smth1", "do smth2"])
 
@@ -70,16 +75,22 @@ class project_as_widget(QGroupBox):
         layout_actions.addWidget(self.btn_open)
 
         layout_actions.addWidget(self.btn_delete)
+        layout_actions.addWidget(self.btn_edit)
 
         layout_actions.addWidget(actions_bar)
 
 
-        self.setMaximumHeight(100)
+        self.setMaximumHeight(120)
         self.setLayout(layout)
 
     def emit_delete_signal(self):
         #self.Signal_OneParameter.emit("date_str")
         self.deleteLater()
+
+    def on_edit(self):
+        self.seg_window = seg_window.seg_window(self)
+        self.seg_window.exec_()
+
 
 
 

@@ -18,6 +18,7 @@ class classes_choose(QDialog):
 
     def on_btn_ok(self, event):
         self.signal1.emit()
+        self.deleteLater()
     
     def adjust_window(self):
         self.setWindowTitle("Выбор классов проекта")

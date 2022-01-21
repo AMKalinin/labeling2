@@ -55,6 +55,7 @@ class new_project_dialog(QDialog): #qformlayout???
 
     def gosignal(self):
         self.signal1.emit()
+        self.deleteLater()
 
     def on_cancel(self):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
