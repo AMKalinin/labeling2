@@ -58,8 +58,8 @@ class project_ini():
     name = ""
     id = 0
     author = ""
-    time_start = time.clock()
-    time_last_change = time.clock()
+    time_start = time.localtime()
+    time_last_change = time.localtime()
     classes = []
     description = ""
     base_project = None

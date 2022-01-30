@@ -18,8 +18,8 @@ class classes_choose(QDialog):
         self.create_place_control_buttons()
 
     def on_btn_ok(self, event):
-        classifier.time_start = time.clock()
-        classifier.time_last_change = time.clock()
+        classifier.time_start = time.localtime()
+        classifier.time_last_change = time.localtime()
         self.signal1.emit()
         #print(classifier.current_project.classes)
         self.deleteLater()

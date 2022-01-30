@@ -10,6 +10,7 @@ import segflex_project_as_widget as project
 import os
 import json
 import segflex_classifier as classifier
+import h5py
 
 
 class main_window(QMainWindow):
@@ -34,12 +35,18 @@ class main_window(QMainWindow):
         if not projects_list:
             return
         for proj in projects_list: #check correct file
-            path_project = path_dir +"/"+ proj
-            f = open(path_project)
-            d = json.load(f)
-            print(d)
+            if proj.find(".hdf5") > 0:
+                path_project = path_dir +"/"+ proj
+            #f = open(path_project)
+            #d = json.load(f)
+                print(path_project)
+                with h5py.File(path_project, "r") as hdf:
+                    to_project_name = hdf.attrs["file_name"]
+                    to_project_classes = [1,2,3]
+                    project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes)
+                    self.layout_SArea.addWidget(project_widget)
 
-            
+            """
             for key, value in d.items():
                 if key == "Name project":
                     to_project_name = value
@@ -50,7 +57,7 @@ class main_window(QMainWindow):
             project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes)
             self.layout_SArea.addWidget(project_widget)
             f.close()
-            
+            """
 
     def test2_create_widget(self, srcs_classes=[]):
         self.project_widget = project.project_as_widget(name="asd", classes=classifier.current_project.classes)
