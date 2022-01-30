@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
 import segflex_classes_choose
 from PyQt5.QtCore import pyqtSignal
 import segflex_main
+import segflex_classifier as classifier
 
 
 class new_project_dialog(QDialog): #qformlayout???
@@ -21,9 +22,14 @@ class new_project_dialog(QDialog): #qformlayout???
         btn_cancel = QPushButton("Отмена")
         btn_ok = QPushButton("ОК")
         label_name = QLabel("Название проекта:")
-        label_path = QLabel("Путь хранения:")
-        text_area_name = QLineEdit()
-        text_area_path = QLineEdit()
+        #label_path = QLabel("Путь хранения:")
+        label_description = QLabel("Описание проекта:")
+        self.text_area_name = QLineEdit()
+        self.text_area_description = QLineEdit()
+        #text_area_path = QLineEdit()
+
+        self.text_area_name.editingFinished.connect(self.set_project_name)
+        self.text_area_description.editingFinished.connect(self.set_project_description)
 
         btn_cancel.clicked.connect(self.on_cancel)
         btn_ok.clicked.connect(self.on_seg_class_choose)
@@ -31,17 +37,32 @@ class new_project_dialog(QDialog): #qformlayout???
         layout_buttons = QHBoxLayout()
         layout_name = QHBoxLayout()
         layout_path = QHBoxLayout()
+        layout_description = QHBoxLayout()
 
         layout_buttons.addWidget(btn_cancel)
         layout_buttons.addWidget(btn_ok)
         layout_name.addWidget(label_name)
-        layout_name.addWidget(text_area_name)
-        layout_path.addWidget(label_path)
-        layout_path.addWidget(text_area_path)
+        layout_name.addWidget(self.text_area_name)
+
+        layout_description.addWidget(label_description)
+        layout_description.addWidget(self.text_area_description)
+        
+        #layout_path.addWidget(label_path)
+        #layout_path.addWidget(text_area_path)
 
         self.layout.addLayout(layout_name)
-        self.layout.addLayout(layout_path)
+        self.layout.addLayout(layout_description)
+        #self.layout.addLayout(layout_path)
         self.layout.addLayout(layout_buttons)
+
+    def set_project_name(self):
+        classifier.current_project.name = self.text_area_name.text()
+        print(classifier.current_project.name)
+    
+    def set_project_description(self):
+        classifier.current_project.description = self.text_area_description.text()
+        print(classifier.current_project.description)
+
 
     def adjust_window(self):
         self.setWindowTitle("Создание нового проекта")

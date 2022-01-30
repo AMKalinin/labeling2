@@ -4,12 +4,13 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDialog,
 from PyQt5.QtCore import pyqtSignal, QObject
 
 import segflex_classifier as classifier
+import time
 
 class classes_choose(QDialog):
     signal1 = pyqtSignal()
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        classifier.project_classes.clear()
+        classifier.current_project.classes.clear()
 
         self.adjust_window()
         self.create_place_combo_boxes()
@@ -17,7 +18,10 @@ class classes_choose(QDialog):
         self.create_place_control_buttons()
 
     def on_btn_ok(self, event):
+        classifier.time_start = time.clock()
+        classifier.time_last_change = time.clock()
         self.signal1.emit()
+        #print(classifier.current_project.classes)
         self.deleteLater()
     
     def adjust_window(self):
@@ -105,17 +109,17 @@ class classes_choose(QDialog):
 
     def on_btn_add(self):
         text = self.box_thirdly.currentText()
-        if text not in classifier.project_classes:
-            classifier.project_classes.append(text)
+        if text not in classifier.current_project.classes:
+            classifier.current_project.classes.append(text)
         self.display_classes_list()
 
     def on_btn_remove(self):
         text = self.box_thirdly.currentText()
-        if text in classifier.project_classes:
-            classifier.project_classes.remove(text)
+        if text in classifier.current_project.classes:
+            classifier.current_project.classes.remove(text)
         self.display_classes_list()
 
     def display_classes_list(self):
-        classifier.project_classes.sort()
-        classes = " ".join(classifier.project_classes)
+        classifier.current_project.classes.sort()
+        classes = " ".join(classifier.current_project.classes)
         self.select_label.setText("Выбрано: " + classes)

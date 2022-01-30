@@ -53,7 +53,7 @@ class main_window(QMainWindow):
             
 
     def test2_create_widget(self, srcs_classes=[]):
-        self.project_widget = project.project_as_widget(name="asd", classes=classifier.project_classes)
+        self.project_widget = project.project_as_widget(name="asd", classes=classifier.current_project.classes)
         self.layout_SArea.addWidget(self.project_widget)
 
 

@@ -51,3 +51,17 @@ code_450 =([            "451_Жилое строение",
 code_460 =([            "461_Портовые сооружения и краны"               ])
 
 project_classes = []
+
+import time
+
+class project_ini():
+    name = ""
+    id = 0
+    author = ""
+    time_start = time.clock()
+    time_last_change = time.clock()
+    classes = []
+    description = ""
+    base_project = None
+
+current_project = project_ini()
