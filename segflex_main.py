@@ -43,7 +43,7 @@ class main_window(QMainWindow):
                 with h5py.File(path_project, "r") as hdf:
                     to_project_name = hdf.attrs["file_name"]
                     to_project_classes = [1,2,3]
-                    project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes)
+                    project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes, path=path_project)
                     self.layout_SArea.addWidget(project_widget)
 
             """

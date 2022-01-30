@@ -21,11 +21,13 @@ class project_as_widget(QGroupBox):
     def __init__(self,
     name,
     classes,
+    path,
     parent=None,
     ide=0):
         #QGroupBox.__init__(self, name, classes, parent, ide)
         super().__init__()
-
+        print("name = " , name, "path = ", path)
+        self.path = path
         layout = QHBoxLayout()
         layout_preview = QVBoxLayout()
         layout_info = QVBoxLayout()
@@ -88,7 +90,7 @@ class project_as_widget(QGroupBox):
         self.deleteLater()
 
     def on_edit(self):
-        self.seg_window = seg_window.seg_window(self)
+        self.seg_window = seg_window.seg_window(self, self.path)
         self.seg_window.exec_()
 
 
