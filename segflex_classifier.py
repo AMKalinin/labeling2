@@ -62,6 +62,8 @@ HDF_FILE_ATTR_TIME_C = 'time_created'
 HDF_FILE_ATTR_TIME_U = 'time_updated'
 HDF_FILE_ATTR_DESCRIPTION = 'description'
 
+PROJECTS_FOLDER_NAME = '__projects'
+
 
 import time
 

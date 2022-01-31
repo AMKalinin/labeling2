@@ -9,6 +9,7 @@ import time
 import os
 import h5py
 import cv2
+import regex as re
 
 class classes_choose(QDialog):
     signal1 = pyqtSignal()
@@ -29,8 +30,11 @@ class classes_choose(QDialog):
         self.signal1.emit()
         #print(classifier.current_project.classes)
         self.deleteLater()
-
-    def create_new_project_file(self):
+    
+    """
+    CV2.imread не читает названия файлов c  
+    """
+    def create_new_project_file(self): 
         folder_name = "/__projects" #дублирование 
         projects_dir = os.getcwd()
         projects_dir += folder_name
@@ -47,7 +51,7 @@ class classes_choose(QDialog):
             identifier = 0
             for image_path in self.selected_images_list:
                 print(image_path)
-                image_as_numpy = cv2.imread(image_path)
+                image_as_numpy = cv2.imread(image_path) 
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1
@@ -74,9 +78,11 @@ class classes_choose(QDialog):
         self.layout.addLayout(selected_images_layout)
 
     def add_images(self):
-        file_dialog = QFileDialog.getOpenFileName()[0]
-        if file_dialog not in self.selected_images_list:
-            self.selected_images_list.append(file_dialog)
+        file_dialog_response = QFileDialog.getOpenFileName()[0]
+        match = re.search(r'\p{IsCyrillic}', file_dialog_response) 
+        assert match == None, 'cv2.imread need english file name'
+        if file_dialog_response not in self.selected_images_list:
+            self.selected_images_list.append(file_dialog_response)
         images = " ".join(self.selected_images_list)
         self.selected_images.setText("Выбранные изображения: " + images)
         #print(self.selected_images_list)
