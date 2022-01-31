@@ -7,6 +7,7 @@
 #python3.7 
 #PyQt5
 #CV2
+#regex
 
 ### 3. Usage
 python ./segflex.py
