@@ -52,6 +52,17 @@ code_460 =([            "461_Портовые сооружения и краны
 
 project_classes = []
 
+HDF_GROUP_SRCS_NAME = '__srcs_images'
+HDF_GROUP_FEATURES_NAME = '__features'
+HDF_POSTFIX = '.hdf5'
+
+HDF_FILE_ATTR_NAME = 'name'
+HDF_FILE_ATTR_CLASSES = 'classes'
+HDF_FILE_ATTR_TIME_C = 'time_created'
+HDF_FILE_ATTR_TIME_U = 'time_updated'
+HDF_FILE_ATTR_DESCRIPTION = 'description'
+
+
 import time
 
 class project_ini():
@@ -63,5 +74,6 @@ class project_ini():
     classes = []
     description = ""
     base_project = None
+    selected_files = []
 
 current_project = project_ini()

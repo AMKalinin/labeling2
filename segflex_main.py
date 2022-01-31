@@ -3,7 +3,8 @@ from PyQt5.QtCore import pyqtSignal, QObject
 from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, QFrame, QGridLayout,
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
-                            QScrollArea, QToolButton, QSizePolicy, QComboBox)
+                            QScrollArea, QToolButton, QSizePolicy, QComboBox,
+                            QFileDialog)
 
 import segflex_new_project
 import segflex_project_as_widget as project
@@ -11,6 +12,7 @@ import os
 import json
 import segflex_classifier as classifier
 import h5py
+import time
 
 
 class main_window(QMainWindow):
@@ -24,27 +26,35 @@ class main_window(QMainWindow):
         #self.check_projects_folder()
         self.create_place_widgets_main_window()
 
-    def check_projects_folder(self):
-        path_dir = os.getcwd()
-        path_dir += "/__projects"
-        if not os.path.exists(path_dir):
-            print("project_folder_created")
+    def clear_layout(self, layout):
+        for i in reversed(range(layout.count())): 
+            layout.itemAt(i).widget().setParent(None)
+
+
+    def parse_projects_folder(self):
+        self.clear_layout(layout=self.layout_SArea)
+        #for i in reversed(range(self.layout_SArea.count())): 
+         #   self.layout_SArea.itemAt(i).widget().setParent(None)
+        folder_name = "/__projects"
+        projects_dir = os.getcwd()
+        projects_dir += folder_name
+        if not os.path.exists(projects_dir):
             os.mkdir(path_dir)
-        projects_list = os.listdir(path_dir)
-        print(projects_list)
+            return 
+        projects_list = os.listdir(projects_dir)
         if not projects_list:
             return
-        for proj in projects_list: #check correct file
-            if proj.find(".hdf5") > 0:
-                path_project = path_dir +"/"+ proj
-            #f = open(path_project)
-            #d = json.load(f)
-                print(path_project)
-                with h5py.File(path_project, "r") as hdf:
-                    to_project_name = hdf.attrs["file_name"]
-                    to_project_classes = [1,2,3]
-                    project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes, path=path_project)
+        for project_name in projects_list:
+            if project_name.find(classifier.HDF_POSTFIX) > 0: #and project_name.find("project") != -1:
+                project_full_name = projects_dir + '/' + project_name
+                with h5py.File(project_full_name, 'r') as hdf: #ATTRS???
+                    to_project_name = hdf.attrs[classifier.HDF_FILE_ATTR_NAME]
+                    to_project_classes = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
+                    project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes, path=project_full_name)
                     self.layout_SArea.addWidget(project_widget)
+
+    #def add_project_widget(self):
+
 
             """
             for key, value in d.items():
@@ -67,7 +77,25 @@ class main_window(QMainWindow):
     def test_create_widget(self):
         self.project_widget = project.project_as_widget(name="asd", classes=[4,4,4])
         self.layout_SArea.addWidget(self.project_widget)
-
+    """
+    def create_new_project_file(self):
+        folder_name = "/__projects" #дублирование 
+        projects_dir = os.getcwd()
+        projects_dir += folder_name
+        project_name = projects_dir + '/' + "testname" + classifier.HDF_POSTFIX  #classifier.current_project.name
+        with h5py.File(project_name, 'w-') as hdf:
+            hdf.attrs[classifier.HDF_FILE_ATTR_NAME] = classifier.current_project.name
+            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_C] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_U] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_ATTR_DESCRIPTION] = classifier.current_project.description
+            hdf.create_group(classifier.HDF_GROUP_SRCS_NAME)
+            hdf.create_group(classifier.HDF_GROUP_FEATURES_NAME)
+            image_index = 0
+            image_group = hdf.require_group(classifier.HDF_GROUP_SRCS_NAME)
+            file_dialog = QFileDialog.getOpenFileName()[0]
+            print(file_dialog)
+        #pass
+    """
 
     def create_button_group(self):
         button_group = QGroupBox()
@@ -130,7 +158,7 @@ class main_window(QMainWindow):
         self.layout_SArea = QVBoxLayout(widget)
 
 
-        self.check_projects_folder()
+        self.parse_projects_folder()
 
         #self.layout_SArea.addWidget(a1)
         #self.layout_SArea.addWidget(a2)
@@ -154,9 +182,13 @@ class main_window(QMainWindow):
         description = QLabel(file_description)
         self.main_layout.addWidget(description, 2, 1)
 
+    def reparse(self):
+        self.parse_projects_folder()
+
     def on_create_new_project_clicked(self):
         self.dialog = segflex_new_project.new_project_dialog(self)
-        self.dialog.signal1.connect(self.test2_create_widget)
+        #self.dialog.signal1.connect(self.create_new_project_file())
+        self.dialog.signal1.connect(self.parse_projects_folder)
         self.dialog.exec_()
 
     def create_place_widgets_main_window(self):

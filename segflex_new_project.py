@@ -8,6 +8,7 @@ import segflex_classes_choose
 from PyQt5.QtCore import pyqtSignal
 import segflex_main
 import segflex_classifier as classifier
+import os
 
 
 class new_project_dialog(QDialog): #qformlayout???
@@ -20,7 +21,7 @@ class new_project_dialog(QDialog): #qformlayout???
 
     def create_place_buttons(self):
         btn_cancel = QPushButton("Отмена")
-        btn_ok = QPushButton("ОК")
+        self.btn_ok = QPushButton("ОК")
         label_name = QLabel("Название проекта:")
         #label_path = QLabel("Путь хранения:")
         label_description = QLabel("Описание проекта:")
@@ -32,7 +33,7 @@ class new_project_dialog(QDialog): #qformlayout???
         self.text_area_description.editingFinished.connect(self.set_project_description)
 
         btn_cancel.clicked.connect(self.on_cancel)
-        btn_ok.clicked.connect(self.on_seg_class_choose)
+        self.btn_ok.clicked.connect(self.on_seg_class_choose)
 
         layout_buttons = QHBoxLayout()
         layout_name = QHBoxLayout()
@@ -40,7 +41,7 @@ class new_project_dialog(QDialog): #qformlayout???
         layout_description = QHBoxLayout()
 
         layout_buttons.addWidget(btn_cancel)
-        layout_buttons.addWidget(btn_ok)
+        layout_buttons.addWidget(self.btn_ok)
         layout_name.addWidget(label_name)
         layout_name.addWidget(self.text_area_name)
 
@@ -55,7 +56,19 @@ class new_project_dialog(QDialog): #qformlayout???
         #self.layout.addLayout(layout_path)
         self.layout.addLayout(layout_buttons)
 
+    def check_project_name(self):
+        folder_name = "/__projects" #дублируется в мейне
+        projects_dir = os.getcwd()
+        projects_dir += folder_name
+        projects_list = os.listdir(projects_dir)
+        if self.text_area_name.text() + '.hdf5' in projects_list:
+            self.btn_ok.setDisabled(True)
+        else:
+            self.btn_ok.setEnabled(True)
+            
+
     def set_project_name(self):
+        self.check_project_name()
         classifier.current_project.name = self.text_area_name.text()
         print(classifier.current_project.name)
     

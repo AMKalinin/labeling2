@@ -1,10 +1,14 @@
 import sys
 from PyQt5.QtWidgets import (QWidget, QLabel, QDialog,
-    QComboBox, QApplication, QListView, QVBoxLayout, QHBoxLayout, QPushButton)
+    QComboBox, QApplication, QListView, QVBoxLayout, QHBoxLayout, QPushButton,
+    QFileDialog)
 from PyQt5.QtCore import pyqtSignal, QObject
 
 import segflex_classifier as classifier
 import time
+import os
+import h5py
+import cv2
 
 class classes_choose(QDialog):
     signal1 = pyqtSignal()
@@ -15,20 +19,70 @@ class classes_choose(QDialog):
         self.adjust_window()
         self.create_place_combo_boxes()
         self.create_place_choose_buttons()
+        self.create_place_choose_image_buttons()
         self.create_place_control_buttons()
 
     def on_btn_ok(self, event):
         classifier.time_start = time.localtime()
         classifier.time_last_change = time.localtime()
+        self.create_new_project_file()
         self.signal1.emit()
         #print(classifier.current_project.classes)
         self.deleteLater()
+
+    def create_new_project_file(self):
+        folder_name = "/__projects" #дублирование 
+        projects_dir = os.getcwd()
+        projects_dir += folder_name
+        project_name = projects_dir + '/' + classifier.current_project.name + classifier.HDF_POSTFIX  #classifier.current_project.name
+        with h5py.File(project_name, 'w-') as hdf:
+            hdf.attrs[classifier.HDF_FILE_ATTR_NAME] = classifier.current_project.name
+            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_C] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_U] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_ATTR_DESCRIPTION] = classifier.current_project.description
+            hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES] = classifier.current_project.classes
+            hdf.create_group(classifier.HDF_GROUP_SRCS_NAME)
+            hdf.create_group(classifier.HDF_GROUP_FEATURES_NAME)
+            image_group = hdf.require_group(classifier.HDF_GROUP_SRCS_NAME)
+            identifier = 0
+            for image_path in self.selected_images_list:
+                print(image_path)
+                image_as_numpy = cv2.imread(image_path)
+                image_group.create_dataset(str(identifier), data=image_as_numpy)
+                #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
+                identifier += 1
+
+            #file_dialog = QFileDialog.getOpenFileName()[0]
+            #print(file_dialog)
     
     def adjust_window(self):
         self.setWindowTitle("Выбор классов проекта")
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+    
+    def create_place_choose_image_buttons(self):
+        self.selected_images = QLabel("Выбранные изображения: ")
+        self.selected_images_list = []
 
+        btn_add = QPushButton("Добавить изображение")
+        btn_add.clicked.connect(self.add_images)
+
+        selected_images_layout = QVBoxLayout()
+        selected_images_layout.addWidget(self.selected_images)
+        selected_images_layout.addWidget(btn_add)
+
+        self.layout.addLayout(selected_images_layout)
+
+    def add_images(self):
+        file_dialog = QFileDialog.getOpenFileName()[0]
+        if file_dialog not in self.selected_images_list:
+            self.selected_images_list.append(file_dialog)
+        images = " ".join(self.selected_images_list)
+        self.selected_images.setText("Выбранные изображения: " + images)
+        #print(self.selected_images_list)
+
+
+    
     def create_place_choose_buttons(self):
         self.select_label = QLabel("Выбрано: ")
         btn_add = QPushButton("Добавить")

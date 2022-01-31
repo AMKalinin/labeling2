@@ -55,7 +55,7 @@ class seg_window(QDialog):
     
         self.adjust_window()
         self.create_bar_tool()
-        self.open_images_dir()
+        #self.open_images_dir()
         self.create_image_area()
         #self.initPre()
     
