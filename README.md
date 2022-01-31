@@ -6,6 +6,7 @@
 ### 2. Requirements
 #python3.7 
 #PyQt5
+#CV2
 
 ### 3. Usage
 python ./segflex.py
