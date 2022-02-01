@@ -31,13 +31,8 @@ class classes_choose(QDialog):
         #print(classifier.current_project.classes)
         self.deleteLater()
     
-    """
-    CV2.imread не читает названия файлов c  
-    """
     def create_new_project_file(self): 
-        folder_name = "/__projects" #дублирование 
-        projects_dir = os.getcwd()
-        projects_dir += folder_name
+        projects_dir = classifier.PROJECTS_FOLDER_FULL_NAME
         project_name = projects_dir + '/' + classifier.current_project.name + classifier.HDF_POSTFIX  #classifier.current_project.name
         with h5py.File(project_name, 'w-') as hdf:
             hdf.attrs[classifier.HDF_FILE_ATTR_NAME] = classifier.current_project.name
@@ -51,7 +46,7 @@ class classes_choose(QDialog):
             identifier = 0
             for image_path in self.selected_images_list:
                 print(image_path)
-                image_as_numpy = cv2.imread(image_path) 
+                image_as_numpy = cv2.imread(image_path) # neef check for supporting formats
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1

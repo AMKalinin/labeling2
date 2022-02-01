@@ -11,29 +11,31 @@ import os
 import h5py
 import numpy as np
 import cv2
+import segflex_classifier as classifier
 
 class seg_window(QDialog):
     def __init__(self, parent=None, path=None):
         QDialog.__init__(self, parent)
-        #self.path = path
+        """
         with h5py.File(path, "r") as hdf:
             print("Keys: %s" % hdf.keys())
-            group = hdf["srcs_images"]
+            group = hdf[classifier.HDF_GROUP_SRCS_NAME]
             for key in group.keys():
                 print(key)
             dataset = group["1"][()]
             cv2.imshow("qwe", dataset)
             #print(dataset)
+        """
 
-            """
+        """
             arr = np.ndarray((225,225,3), "uint8")
             group = hdf.require_group("srcs_images")
             dataset = group.require_dataset("1", (225, 225, 3), "uint8")
             dataset.write_direct(arr)
             print(arr)
-            """
+        """
 
-            """
+        """
             print("Keys: %s" % hdf.keys())
             a_group_key = list(hdf.keys())[1]
 
@@ -43,19 +45,19 @@ class seg_window(QDialog):
 
             print(names)
             print(dataset)
-            """
-            """
+        """
+        """
             dataset = hdf.require_dataset("1")
             arr = np.ndarray([1,2,3])
             dataset.read_direct(arr, shape=(255,255,3), dtype=)
-            """
+        """
             #cv2.imshow("tiger", data)
 
 
     
         self.adjust_window()
         self.create_bar_tool()
-        #self.open_images_dir()
+        self.open_images_dir()
         self.create_image_area()
         #self.initPre()
     
@@ -101,6 +103,7 @@ class seg_window(QDialog):
     def create_image_area(self):
         self.image_index = 0
         self.display = QLabel()
+        self.display.setMaximumSize(100,100)
         #pixmap = QtGui.QPixmap(self.images_list[self.image_index])
         self.image_adr = self.images_dir + "/" + self.images_list[self.image_index]
                     #"C:\_python_pr\8.3_version_2_data_labeling\__images\image — копия (2).jpg"
