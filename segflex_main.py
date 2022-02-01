@@ -30,10 +30,10 @@ class main_window(QMainWindow):
     def parse_projects_folder(self):
         self.clear_table_layout(layout=self.layout_SArea)
         self.check_create_projects_folder()
-        projects_list = os.listdir(self.projects_folder)
+        projects_list = os.listdir(classifier.PROJECTS_FOLDER_FULL_NAME)
         for project_short_name in projects_list:
-            if project_short_name.find(classifier.HDF_POSTFIX) > 0:
-                project_full_name = self.projects_folder + '/' + project_short_name
+            if project_short_name.find(classifier.HDF_POSTFIX) != -1:
+                project_full_name = classifier.PROJECTS_FOLDER_FULL_NAME + '/' + project_short_name
                 with h5py.File(project_full_name, 'r') as hdf: #ATTRS???
                     to_project_name = hdf.attrs[classifier.HDF_FILE_ATTR_NAME]
                     to_project_classes = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
@@ -160,10 +160,7 @@ class main_window(QMainWindow):
             layout.itemAt(i).widget().setParent(None)
 
     def check_create_projects_folder(self):
-        self.projects_folder = os.getcwd()
-        self.projects_folder += '/'
-        self.projects_folder += classifier.PROJECTS_FOLDER_NAME
-        if not os.path.exists(self.projects_folder):
-            os.mkdir(self.projects_folder)
+        if not os.path.exists(classifier.PROJECTS_FOLDER_FULL_NAME):
+            os.mkdir(classifier.PROJECTS_FOLDER_FULL_NAME)
 
     

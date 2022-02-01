@@ -62,7 +62,12 @@ HDF_FILE_ATTR_TIME_C = 'time_created'
 HDF_FILE_ATTR_TIME_U = 'time_updated'
 HDF_FILE_ATTR_DESCRIPTION = 'description'
 
+import os
+
 PROJECTS_FOLDER_NAME = '__projects'
+PROJECTS_FOLDER_FULL_NAME = os.getcwd() + '/' + PROJECTS_FOLDER_NAME
+#PROJECTS_LIST = os.listdir(PROJECTS_FOLDER_FULL_NAME)
+
 
 
 import time

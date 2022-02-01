@@ -57,10 +57,7 @@ class new_project_dialog(QDialog): #qformlayout???
         self.layout.addLayout(layout_buttons)
 
     def check_project_name(self):
-        folder_name = "/__projects" #дублируется в мейне
-        projects_dir = os.getcwd()
-        projects_dir += folder_name
-        projects_list = os.listdir(projects_dir)
+        projects_list = os.listdir(classifier.PROJECTS_FOLDER_FULL_NAME)
         if self.text_area_name.text() + '.hdf5' in projects_list:
             self.btn_ok.setDisabled(True)
         else:
