@@ -3,7 +3,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, QFrame, QGridLayout,
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
-                            QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar)
+                            QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
+                            )
 
 from PyQt5.QtGui import QImage, QPixmap
 
@@ -16,6 +17,8 @@ import segflex_classifier as classifier
 class seg_window(QDialog):
     def __init__(self, parent=None, path=None):
         QDialog.__init__(self, parent)
+        self.path = path
+        self.identifier = 0
         """
         with h5py.File(path, "r") as hdf:
             print("Keys: %s" % hdf.keys())
@@ -54,11 +57,12 @@ class seg_window(QDialog):
             #cv2.imshow("tiger", data)
 
 
-    
+        #self.open_file() 
         self.adjust_window()
         self.create_bar_tool()
         self.open_images_dir()
-        self.create_image_area()
+        self.open_image(self.identifier)
+        #self.create_image_area()
         #self.initPre()
     
     def create_bar_tool(self):
@@ -89,18 +93,85 @@ class seg_window(QDialog):
         #self.layout.addWidget(image_bar)
         #self.layout.addLayout(layout)
     def on_previous(self):
+        if self.identifier > 0:
+            self.identifier -= 1
+            self.open_image(self.identifier)
+        """
         self.image_index -= 1
         self.image_adr = self.images_dir + "/" + self.images_list[self.image_index]
         self.pixmap = QtGui.QPixmap(self.image_adr)
         self.display.setPixmap(self.pixmap)
+        """
 
     def on_next(self):
+        if self.identifier < self.identifier_max:
+            self.identifier += 1
+            self.open_image(self.identifier)
+        """
         self.image_index += 1
         self.image_adr = self.images_dir + "/" + self.images_list[self.image_index]
         self.pixmap = QtGui.QPixmap(self.image_adr)
         self.display.setPixmap(self.pixmap)
+        """
+    
+    def open_file(self):
+        self.hdf = h5py.File(self.path, 'w')
+        self.identifier_max = self.hdf.keys()
+        print(self.identifier_max)
 
-    def create_image_area(self):
+    #def closeEvent(self, event):
+    #    self.hdf.close()
+
+    def open_image(self, identifier):  #каждый раз открываю проблема закрыть корректно файл, если один раз
+        self.clear_window_layout(self.image_layout)
+        self.display = QLabel()
+        self.display.setMaximumSize(600, 600)
+        with h5py.File(self.path, 'r') as hdf:
+            self.identifier_max = len(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys())) - 1 #starting with 0
+            print(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys()))
+            print(self.identifier_max)
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            dataset = group_srcs[str(identifier)]
+            image_as_numpy = dataset[()]
+            height, width, channel = image_as_numpy.shape
+            bytesPerLine = 3 * width
+            image_as_qimage = QImage(image_as_numpy, width, height, bytesPerLine, QImage.Format_RGB888)
+            image_as_pixmap = QPixmap(image_as_qimage)
+            self.display.setPixmap(image_as_pixmap)
+            self.image_layout.addWidget(self.display)
+            
+
+            #print(height, width, channel)
+            #dataset = group_srcs.get(str(identifier))
+            #print(group_srcs)
+            #print(dataset[()])
+            #image_as_numpy = np.ndarray(group_srcs[str(identifier)])
+            #print(image_as_numpy)
+        """
+            #image_as_numpy = group_srcs.require_dataset(str(identifier))
+            height, width, channel = image_as_numpy.shape
+            bytesPerLine = 3 * width
+            image_as_q = QImage(image_as_numpy, width, height, bytesPerLine, QImage.Format_RGB888)
+            self.display.setPixmap(image_as_q)
+            #image_as_pix = QPixmap(image_as_q)
+        """
+        """
+        img = cv2.imread('test.png')[:,:,::1]/255. 
+        imgDown = cv2.pyrDown(img)
+        imgDown = np.float32(imgDown)        
+        cvRGBImg = cv2.cvtColor(imgDown, cv2.cv.CV_BGR2RGB)
+        #qimg = QtGui.QImage(cvRGBImg.data,cvRGBImg.shape[1], cvRGBImg.shape[0], QtGui.QImage.Format_RGB888)
+        pixmap01 = QtGui.QPixmap.fromImage(qimg)
+        self.image01TopTxt = QtGui.QLabel('window',self)
+        self.imageLable01 = QtGui.QLabel(self)
+        self.imageLable01.setPixmap(pixmap01)
+        """
+        #height, width, channel = cvImg.shape
+        #bytesPerLine = 3 * width
+        #qImg = QImage(cvImg.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        #image = 
+
+    def create_image_area2(self):
         self.image_index = 0
         self.display = QLabel()
         self.display.setMaximumSize(100,100)
@@ -134,9 +205,11 @@ class seg_window(QDialog):
 
     def adjust_window(self):
         self.setWindowTitle("Разметка проекта")
-        self.setMinimumSize(100,100)
+        self.setMinimumSize(800,800)
         self.layout = QHBoxLayout()
+        self.image_layout = QHBoxLayout()
         self.setLayout(self.layout)
+        self.layout.addLayout(self.image_layout)
         
     def initPre(self):
         """
@@ -146,3 +219,7 @@ class seg_window(QDialog):
         self.layout.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
         self.layout.addWidget(QToolBar('View', objectName='view_toolbar'))
         self.layout.addWidget(QToolBar('Graphol', objectName='graphol_toolbar')) 
+    
+    def clear_window_layout(self, layout):
+        for i in reversed(range(layout.count())): 
+            layout.itemAt(i).widget().setParent(None)

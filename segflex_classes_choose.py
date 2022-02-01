@@ -47,6 +47,7 @@ class classes_choose(QDialog):
             for image_path in self.selected_images_list:
                 print(image_path)
                 image_as_numpy = cv2.imread(image_path) # neef check for supporting formats
+                print(image_as_numpy.shape)
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1
