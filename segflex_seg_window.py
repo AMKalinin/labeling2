@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
                             )
 
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QIcon
 
 import os
 import h5py
@@ -14,105 +14,62 @@ import numpy as np
 import cv2
 import segflex_classifier as classifier
 
+ICON_SHEVRON_LEFT = 'shevron_left.png'
+ICON_SHEVRON_RIGHT = 'shevron_right.png'
+
 class seg_window(QDialog):
     def __init__(self, parent=None, path=None):
         QDialog.__init__(self, parent)
         self.path = path
         self.identifier = 0
-        """
-        with h5py.File(path, "r") as hdf:
-            print("Keys: %s" % hdf.keys())
-            group = hdf[classifier.HDF_GROUP_SRCS_NAME]
-            for key in group.keys():
-                print(key)
-            dataset = group["1"][()]
-            cv2.imshow("qwe", dataset)
-            #print(dataset)
-        """
-
-        """
-            arr = np.ndarray((225,225,3), "uint8")
-            group = hdf.require_group("srcs_images")
-            dataset = group.require_dataset("1", (225, 225, 3), "uint8")
-            dataset.write_direct(arr)
-            print(arr)
-        """
-
-        """
-            print("Keys: %s" % hdf.keys())
-            a_group_key = list(hdf.keys())[1]
-
-            # Get the data
-            names = list(hdf[a_group_key])
-            dataset = hdf.a_group_key.require_dataset("1")
-
-            print(names)
-            print(dataset)
-        """
-        """
-            dataset = hdf.require_dataset("1")
-            arr = np.ndarray([1,2,3])
-            dataset.read_direct(arr, shape=(255,255,3), dtype=)
-        """
-            #cv2.imshow("tiger", data)
-
-
-        #self.open_file() 
+       
         self.adjust_window()
-        self.create_bar_tool()
+        self.create_navigation_bar()
         self.open_images_dir()
         self.open_image(self.identifier)
         #self.create_image_area()
         #self.initPre()
     
-    def create_bar_tool(self):
-        image_bar = QToolBar()
+    def create_navigation_bar(self):
+        navigation_bar = QToolBar()
 
-        toolButton1 = QToolButton()
-        toolButton1.setText("Previous")
+        previous_btn = QToolButton()
+        previous_icon = QIcon()
+        previous_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_PREVIOUS_FULL), QIcon.Normal, QIcon.Off)
+        previous_btn.setIcon(previous_icon)
+
+        next_btn = QToolButton()
+        next_icon = QIcon()
+        next_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_NEXT_FULL), QIcon.Normal, QIcon.Off)
+        next_btn.setIcon(next_icon)
+        #next_btn.setText("Next")
+
+
         #toolButton.setCheckable(True)
         #toolButton.setAutoExclusive(True)
-        image_bar.addWidget(toolButton1)
-        toolButton2 = QToolButton()
-        toolButton2.setText("Next")
         #toolButton.setCheckable(True)
         #toolButton.setAutoExclusive(True)
-        image_bar.addWidget(toolButton2)
-        toolButton1.clicked.connect(self.on_previous)
-        toolButton2.clicked.connect(self.on_next)
 
-        #layout = QVBoxLayout()
-        self.layout.addWidget(image_bar)
-        
-        #test_btn = QPushButton("test")
+        navigation_bar.addWidget(previous_btn)
+        navigation_bar.addWidget(next_btn)
 
-        #layout.addWidget(image_bar)
-        #layout.addWidget(test_btn)
-        #self.addToolBar(Qt.LeftToolBarArea, image_bar)
+        previous_btn.clicked.connect(self.on_previous)
+        next_btn.clicked.connect(self.on_next)
+
+        self.layout.addWidget(navigation_bar, 0, 0, Qt.AlignTop | Qt.AlignHCenter) #области  
         
-        #self.layout.addWidget(image_bar)
-        #self.layout.addLayout(layout)
+
     def on_previous(self):
         if self.identifier > 0:
             self.identifier -= 1
             self.open_image(self.identifier)
-        """
-        self.image_index -= 1
-        self.image_adr = self.images_dir + "/" + self.images_list[self.image_index]
-        self.pixmap = QtGui.QPixmap(self.image_adr)
-        self.display.setPixmap(self.pixmap)
-        """
+
 
     def on_next(self):
         if self.identifier < self.identifier_max:
             self.identifier += 1
             self.open_image(self.identifier)
-        """
-        self.image_index += 1
-        self.image_adr = self.images_dir + "/" + self.images_list[self.image_index]
-        self.pixmap = QtGui.QPixmap(self.image_adr)
-        self.display.setPixmap(self.pixmap)
-        """
+
     
     def open_file(self):
         self.hdf = h5py.File(self.path, 'w')
@@ -176,10 +133,11 @@ class seg_window(QDialog):
     def adjust_window(self):
         self.setWindowTitle("Разметка проекта")
         self.setMinimumSize(800,800)
-        self.layout = QHBoxLayout()
+        #self.layout = QHBoxLayout()
+        self.layout = QGridLayout()
         self.image_layout = QHBoxLayout()
         self.setLayout(self.layout)
-        self.layout.addLayout(self.image_layout)
+        self.layout.addLayout(self.image_layout, 1, 1, 1, 1) # правильно растянуть область изображения
         
     def initPre(self):
         """
