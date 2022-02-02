@@ -36,6 +36,16 @@ class seg_window(QDialog):
         previous_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_PREVIOUS_FULL), QIcon.Normal, QIcon.Off)
         previous_btn.setIcon(previous_icon)
 
+        to_first_btn = QToolButton()
+        to_first_icon = QIcon()
+        to_first_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_TOFIRST_FULL), QIcon.Normal, QIcon.Off)
+        to_first_btn.setIcon(to_first_icon)
+
+        to_last_btn = QToolButton()
+        to_last_icon = QIcon()
+        to_last_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_TOLAST_FULL), QIcon.Normal, QIcon.Off)
+        to_last_btn.setIcon(to_last_icon)
+
         next_btn = QToolButton()
         next_icon = QIcon()
         next_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_NEXT_FULL), QIcon.Normal, QIcon.Off)
@@ -51,22 +61,38 @@ class seg_window(QDialog):
         #toolButton.setCheckable(True)
         #toolButton.setAutoExclusive(True)
 
+        navigation_bar.addWidget(to_first_btn)
         navigation_bar.addWidget(previous_btn)
         navigation_bar.addWidget(next_btn)
+        navigation_bar.addWidget(to_last_btn)
         navigation_bar.addWidget(self.image_position_widget)
 
+        to_first_btn.clicked.connect(self.on_to_first)
         previous_btn.clicked.connect(self.on_previous)
         next_btn.clicked.connect(self.on_next)
+        to_last_btn.clicked.connect(self.on_to_last)
 
         self.layout.addWidget(navigation_bar, 0, 0, Qt.AlignTop | Qt.AlignHCenter) #области  
         
+    def on_to_first(self):
+        self.identifier = 0
+        self.current_image_position = 1
+        self.open_image(self.identifier)
+        self.update_image_position_widget()
+
+    def on_to_last(self):
+        self.identifier = self.identifier_max
+        self.current_image_position = self.image_position_max
+        self.open_image(self.identifier)
+        self.update_image_position_widget()
+
 
     def on_previous(self):
         if self.identifier > 0:
             self.identifier -= 1
             self.current_image_position -= 1
             self.open_image(self.identifier)
-            self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
+            self.update_image_position_widget()
 
 
     def on_next(self):
@@ -74,7 +100,10 @@ class seg_window(QDialog):
             self.identifier += 1
             self.current_image_position += 1
             self.open_image(self.identifier)
-            self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
+            self.update_image_position_widget()
+    
+    def update_image_position_widget(self):
+        self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
 
     """
     def open_file(self):
