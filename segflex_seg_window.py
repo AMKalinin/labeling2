@@ -136,41 +136,11 @@ class seg_window(QDialog):
             height, width, channel = image_as_numpy.shape
             bytesPerLine = 3 * width
             image_as_qimage = QImage(image_as_numpy, width, height, bytesPerLine, QImage.Format_RGB888)
-            image_as_pixmap = QPixmap(image_as_qimage)
+            image_correct_rgb = image_as_qimage.rgbSwapped()
+            image_as_pixmap = QPixmap(image_correct_rgb)
             self.display.setPixmap(image_as_pixmap)
             self.image_layout.addWidget(self.display)
             
-
-            #print(height, width, channel)
-            #dataset = group_srcs.get(str(identifier))
-            #print(group_srcs)
-            #print(dataset[()])
-            #image_as_numpy = np.ndarray(group_srcs[str(identifier)])
-            #print(image_as_numpy)
-        """
-            #image_as_numpy = group_srcs.require_dataset(str(identifier))
-            height, width, channel = image_as_numpy.shape
-            bytesPerLine = 3 * width
-            image_as_q = QImage(image_as_numpy, width, height, bytesPerLine, QImage.Format_RGB888)
-            self.display.setPixmap(image_as_q)
-            #image_as_pix = QPixmap(image_as_q)
-        """
-        """
-        img = cv2.imread('test.png')[:,:,::1]/255. 
-        imgDown = cv2.pyrDown(img)
-        imgDown = np.float32(imgDown)        
-        cvRGBImg = cv2.cvtColor(imgDown, cv2.cv.CV_BGR2RGB)
-        #qimg = QtGui.QImage(cvRGBImg.data,cvRGBImg.shape[1], cvRGBImg.shape[0], QtGui.QImage.Format_RGB888)
-        pixmap01 = QtGui.QPixmap.fromImage(qimg)
-        self.image01TopTxt = QtGui.QLabel('window',self)
-        self.imageLable01 = QtGui.QLabel(self)
-        self.imageLable01.setPixmap(pixmap01)
-        """
-        #height, width, channel = cvImg.shape
-        #bytesPerLine = 3 * width
-        #qImg = QImage(cvImg.data, width, height, bytesPerLine, QImage.Format_RGB888)
-        #image = 
-
     def create_image_area2(self):
         self.image_index = 0
         self.display = QLabel()
