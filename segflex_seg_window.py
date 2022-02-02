@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
-                            )
+                            QStatusBar)
 
 from PyQt5.QtGui import QImage, QPixmap, QIcon
 
@@ -14,19 +14,17 @@ import numpy as np
 import cv2
 import segflex_classifier as classifier
 
-ICON_SHEVRON_LEFT = 'shevron_left.png'
-ICON_SHEVRON_RIGHT = 'shevron_right.png'
-
 class seg_window(QDialog):
     def __init__(self, parent=None, path=None):
         QDialog.__init__(self, parent)
         self.path = path
         self.identifier = 0
+        self.current_image_position = 1
        
         self.adjust_window()
-        self.create_navigation_bar()
         self.open_images_dir()
         self.open_image(self.identifier)
+        self.create_navigation_bar()
         #self.create_image_area()
         #self.initPre()
     
@@ -42,6 +40,9 @@ class seg_window(QDialog):
         next_icon = QIcon()
         next_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_NEXT_FULL), QIcon.Normal, QIcon.Off)
         next_btn.setIcon(next_icon)
+
+        self.image_position_postfix = ' / ' + str(self.image_position_max) 
+        self.image_position_widget = QLabel(str(self.current_image_position) + self.image_position_postfix) 
         #next_btn.setText("Next")
 
 
@@ -52,6 +53,7 @@ class seg_window(QDialog):
 
         navigation_bar.addWidget(previous_btn)
         navigation_bar.addWidget(next_btn)
+        navigation_bar.addWidget(self.image_position_widget)
 
         previous_btn.clicked.connect(self.on_previous)
         next_btn.clicked.connect(self.on_next)
@@ -62,15 +64,19 @@ class seg_window(QDialog):
     def on_previous(self):
         if self.identifier > 0:
             self.identifier -= 1
+            self.current_image_position -= 1
             self.open_image(self.identifier)
+            self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
 
 
     def on_next(self):
         if self.identifier < self.identifier_max:
             self.identifier += 1
+            self.current_image_position += 1
             self.open_image(self.identifier)
+            self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
 
-    
+    """
     def open_file(self):
         self.hdf = h5py.File(self.path, 'w')
         self.identifier_max = self.hdf.keys()
@@ -78,6 +84,7 @@ class seg_window(QDialog):
 
     #def closeEvent(self, event):
     #    self.hdf.close()
+    """
 
     def open_image(self, identifier):  #каждый раз открываю проблема закрыть корректно файл, если один раз
         self.clear_window_layout(self.image_layout)
@@ -85,6 +92,7 @@ class seg_window(QDialog):
         self.display.setMaximumSize(600, 600)
         with h5py.File(self.path, 'r') as hdf:
             self.identifier_max = len(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys())) - 1 #starting with 0
+            self.image_position_max = self.identifier_max + 1 #starting with 1
             print(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys()))
             print(self.identifier_max)
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
@@ -97,6 +105,8 @@ class seg_window(QDialog):
             image_as_pixmap = QPixmap(image_correct_rgb)
             self.display.setPixmap(image_as_pixmap)
             self.image_layout.addWidget(self.display)
+
+    """
             
     def create_image_area2(self):
         self.image_index = 0
@@ -114,6 +124,7 @@ class seg_window(QDialog):
         #self.display.setPixmap(QPixmap.fromImage(image))
         #f = open(self.images_list[self.image_imdex])
         self.layout.addWidget(self.display)
+    """
 
 
     def open_images_dir(self):
@@ -126,9 +137,6 @@ class seg_window(QDialog):
             os.mkdir(self.images_dir)
         self.images_list = os.listdir(self.images_dir)
         print(self.images_list)
-
-    def display_current_image(self):
-        pass
 
     def adjust_window(self):
         self.setWindowTitle("Разметка проекта")
