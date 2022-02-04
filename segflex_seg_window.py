@@ -13,16 +13,19 @@ import h5py
 import numpy as np
 import cv2
 import segflex_classifier as classifier
+import segflex_draw_window as draw
 
 
 class myLabel(QLabel):
     def __init__(self, parent=None):
-        QLabel.__init__(self, parent)
+        super().__init__()
 
 
-    def mousePressEvent(display, event):
+    def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             print(event.pos())
+            #pixmap = QPixmap()
+            #super().setPixmap(pixmap)
             #self.drawing = True
             #self.lastPoint = event.pos()
 
@@ -59,8 +62,24 @@ class seg_window(QDialog):
         self.open_image(self.identifier)
         self.create_navigation_bar()
         self.create_instruments_bar()
+        self.create_control_btns()
         self.draw_pencil_instruments()
+        print("shallow pixmap = ",id(self.display.pixmap()), id(self.display))
         
+    def create_control_btns(self):
+        edit_btn = QPushButton("Сегментировать")
+        edit_btn.clicked.connect(self.on_edit)
+
+        self.layout.addWidget(edit_btn, 1, 2)
+    
+    def on_edit(self):
+        self.drawing_dialog = draw.drawing_dialog(  canvas_pixmap=self.display.pixmap(),
+                                                    canvas_geometry = self.display.geometry(),
+                                                    window_geometry=self.geometry(),
+                                                    project_path = self.path,
+                                                    identifier = self.identifier
+                                                    )
+        self.drawing_dialog.exec_()
     
     def create_instruments_bar(self):
         instruments_bar = QToolBar()
@@ -84,7 +103,7 @@ class seg_window(QDialog):
         self.lastPoint = QPoint()
 
     """
-    def mousePressEvent(display, event):
+    def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.drawing = True
             self.lastPoint = event.pos()
@@ -106,8 +125,9 @@ class seg_window(QDialog):
         if event.button() == Qt.LeftButton:
             # make drawing flag false
             self.drawing = False
-            #self.display.setPixmap(self.canvas)
+            self.display.setPixmap(self.canvas)
     """
+    
     """
     def paintEvent(self, event):
         # create a canvas
@@ -118,7 +138,7 @@ class seg_window(QDialog):
     """
 
 
-
+    """
     def drawing(self):
         pixmap = QPixmap(self.display.pixmap())
 
@@ -135,7 +155,7 @@ class seg_window(QDialog):
 
         #self.create_image_area()
         #self.initPre()
-    
+    """
     def create_navigation_bar(self):
         navigation_bar = QToolBar()
 
@@ -278,7 +298,7 @@ class seg_window(QDialog):
         print(self.images_list)
 
     def adjust_window(self):
-        self.setWindowTitle("Разметка проекта")
+        self.setWindowTitle("Выбор изображения")
         self.setFixedSize(800,800)
         #self.layout = QHBoxLayout()
         self.layout = QGridLayout()
