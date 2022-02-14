@@ -79,13 +79,30 @@ class drawing_dialog(QDialog):
                         window_geometry=None):
         QDialog.__init__(self, parent)
 
-        self.adjust_window(window_geometry)
-        self.create_canvas(canvas_pixmap, canvas_geometry)
-        self.mask = []
         self.project_path = project_path
         self.identifier = identifier
+        self.mask = []
+        self.adjust_window(window_geometry)
+        self.create_place_connect_classes_buttons()
+        self.create_canvas(canvas_pixmap, canvas_geometry)
+        self.create_working_layers()
         #print("deep pixmap = ",id(self.project_path), id(project_path)) 
         self.create_control_btns()
+
+    def create_place_connect_classes_buttons(self):
+        with h5py.File(self.project_path, 'r') as hdf:
+            self.classes_list = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
+            print("classes in project = ", self.classes_list)
+            i = 1 
+            for el in self.classes_list:
+                button = QPushButton(el)
+                self.layout.addWidget(button, i, 0)
+                i += 1
+
+
+    def create_group_for_objects_on_image(self):
+        with h5py.File(self.project_path, 'r+') as hdf:
+            parent_group = hdf[classifier.HDF_GROUP_OBJECT_LAYERS_NAME]
 
     def create_control_btns(self):
         
@@ -129,7 +146,10 @@ class drawing_dialog(QDialog):
     def print_mask(self):
         print(self.canvas.mask)
     
-    def clear_mask(self):
+    def clear_mask(self): 
+        #painter = QPainter(self.canvas.pixmap)
+        #painter.eraseRect(self.canvas.rect())
+        #self.canvas.painter.eraseRect(self.canvas.rect())
         self.canvas.mask.clear()
 
     def adjust_window(self, geometry):

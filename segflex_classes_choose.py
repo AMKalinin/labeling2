@@ -42,6 +42,7 @@ class classes_choose(QDialog):
             hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES] = classifier.current_project.classes
             hdf.create_group(classifier.HDF_GROUP_SRCS_NAME)
             hdf.create_group(classifier.HDF_GROUP_FEATURES_NAME)
+            hdf.create_group(classifier.HDF_GROUP_OBJECT_LAYERS_NAME)
             image_group = hdf.require_group(classifier.HDF_GROUP_SRCS_NAME)
             identifier = 0
             for image_path in self.selected_images_list:

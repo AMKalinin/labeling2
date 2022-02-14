@@ -54,6 +54,7 @@ project_classes = []
 
 HDF_GROUP_SRCS_NAME = '__srcs_images'
 HDF_GROUP_FEATURES_NAME = '__features'
+HDF_GROUP_OBJECT_LAYERS_NAME = '__object_layers'
 HDF_POSTFIX = '.hdf5'
 
 HDF_FILE_ATTR_NAME = 'name'
