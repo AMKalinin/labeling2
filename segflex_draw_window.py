@@ -85,7 +85,7 @@ class drawing_dialog(QDialog):
         self.adjust_window(window_geometry)
         self.create_place_connect_classes_buttons()
         self.create_canvas(canvas_pixmap, canvas_geometry)
-        self.create_working_layers()
+        self.create_group_for_objects_on_image()
         #print("deep pixmap = ",id(self.project_path), id(project_path)) 
         self.create_control_btns()
 
@@ -103,6 +103,7 @@ class drawing_dialog(QDialog):
     def create_group_for_objects_on_image(self):
         with h5py.File(self.project_path, 'r+') as hdf:
             parent_group = hdf[classifier.HDF_GROUP_OBJECT_LAYERS_NAME]
+            print(parent_group)
 
     def create_control_btns(self):
         
