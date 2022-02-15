@@ -63,6 +63,8 @@ HDF_FILE_ATTR_TIME_C = 'time_created'
 HDF_FILE_ATTR_TIME_U = 'time_updated'
 HDF_FILE_ATTR_DESCRIPTION = 'description'
 
+HDF_IMAGE_ATTR_NAME = '__outline_points'
+
 
 import os
 

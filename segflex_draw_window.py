@@ -28,12 +28,14 @@ class Canvas(QLabel):
     
     def init_mask(self):
         self.mask = QPolygonF()
+        self.mask_points_f = []
         self.mask_points = []
         #print("deep pixmap = ",id(self.pixmap), id(pixmap)) 
     
     def update_mask(self, point):
-        self.mask_points.append(QPointF(point))
+        self.mask_points_f.append(QPointF(point))
         self.mask.append(QPointF(point))
+        self.mask_points.append(point)
 
     def set_pencil_instruments(self):
         self.drawing = False
@@ -67,11 +69,23 @@ class Canvas(QLabel):
         painter.drawPolygon(self.mask)
 
     def fill_polygon(self):
+        self.pen = QtGui.QPen(QtGui.QColor(0,0,0))                      # set lineColor
+        self.pen.setWidth(3)                                            # set lineWidth
+        self.brush = QtGui.QBrush(QtGui.QColor(255,255,255,255))
         painter = QPainter(self.pixmap)
+        painter.setBrush(self.brush)
+        painter.setPen(self.pen)
+        painter.drawLine(QPointF(0,0), QPointF(400,400))
+        #print(self.lastPoint, self.mask_points_f[0])
+        painter.drawLine(QPointF(self.lastPoint), self.mask_points_f[0])
+        print(QPointF(self.lastPoint), self.mask_points_f[0])
+        self.update_mask(self.mask[0])
+        #self.mask_points_f.append(self.mask_points_f[0])
         #region = QRegion(self.mask)
-        self.painter_path = QPainterPath(self.mask_points[0])
+        self.painter_path = QPainterPath(self.mask_points_f[0])
         self.painter_path.addPolygon(self.mask)
         painter.fillPath(self.painter_path, Qt.black)
+        self.setPixmap(self.pixmap)
 
 
 
@@ -197,6 +211,12 @@ class drawing_dialog(QDialog):
 
     def save_mask(self):
         with h5py.File(self.project_path, 'r+') as hdf:
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            image_srcs = group_srcs[str(self.identifier)]
+            print(image_srcs)
+            image_srcs.attrs[classifier.HDF_IMAGE_ATTR_NAME] = str(self.canvas.mask_points)
+            print(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_NAME])
+            """
             group_features = hdf[classifier.HDF_GROUP_FEATURES_NAME]
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             srcs_tuple = group_srcs[str(self.identifier)]
@@ -207,7 +227,7 @@ class drawing_dialog(QDialog):
             
             print(self.feature_base)
             cv2.imshow("base_mask",self.feature_base)
-
+            """
             #print(srcs_tuple[()])
             #cv2.imshow("sd", srcs_tuple[()])
             
@@ -216,7 +236,7 @@ class drawing_dialog(QDialog):
             #print(mask_as_dataset)
 
     def print_mask(self):
-        print(self.canvas.mask)
+        print(self.canvas.mask_points)
     
     def clear_mask(self): 
         #painter = QPainter(self.canvas.pixmap)
