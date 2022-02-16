@@ -42,7 +42,7 @@ class classes_choose(QDialog):
             hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES] = classifier.current_project.classes
             hdf.create_group(classifier.HDF_GROUP_SRCS_NAME)
             hdf.create_group(classifier.HDF_GROUP_FEATURES_NAME)
-            hdf.create_group(classifier.HDF_GROUP_OBJECT_LAYERS_NAME)
+            #hdf.create_group(classifier.HDF_GROUP_OBJECT_LAYERS_NAME)
             image_group = hdf.require_group(classifier.HDF_GROUP_SRCS_NAME)
             identifier = 0
             for image_path in self.selected_images_list:
@@ -50,6 +50,8 @@ class classes_choose(QDialog):
                 image_as_numpy = cv2.imread(image_path) # neef check for supporting formats
                 print(image_as_numpy.shape)
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
+                image_srcs = image_group[str(identifier)]
+                image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = 0
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1
 

@@ -1,12 +1,12 @@
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint#, QVector
 from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, QFrame, QGridLayout,
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
                             QStatusBar)
 
-from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen
+from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygon
 
 import os
 import h5py
@@ -14,6 +14,8 @@ import numpy as np
 import cv2
 import segflex_classifier as classifier
 import segflex_draw_window as draw
+import re
+from ast import literal_eval as make_tuple
 
 
 class myLabel(QLabel):
@@ -53,7 +55,7 @@ class myLabel(QLabel):
 class seg_window(QDialog):
     def __init__(self, parent=None, path=None):
         QDialog.__init__(self, parent)
-        self.path = path
+        self.project_path = path
         self.identifier = 0
         self.current_image_position = 1
        
@@ -70,13 +72,74 @@ class seg_window(QDialog):
         edit_btn = QPushButton("Сегментировать")
         edit_btn.clicked.connect(self.on_edit)
 
+        self.show_existing_mask_button = QPushButton("Показать маску")
+        self.show_existing_mask_button.setCheckable(True)
+        self.show_existing_mask_button.setChecked(False)
+        self.show_existing_mask_button.toggled["bool"].connect(self.on_show_existing_mask_button)
+
         self.layout.addWidget(edit_btn, 1, 2)
+        self.layout.addWidget(self.show_existing_mask_button, 2, 2)
     
+    def on_show_existing_mask_button(self, status):
+        if status == True:
+            self.show_existing_mask_button.setChecked(True)
+            self.overlay_existing_mask()
+        else:
+            self.show_existing_mask_button.setChecked(False)
+            self.hide_existing_mask()
+
+    def overlay_existing_mask(self):
+        self.parse_current_image_attrs()
+        print("objects parsed")
+        pass
+
+    def hide_existing_mask(self):
+        print("maska skrita")
+        pass
+    
+    def get_qvector_from_attr(self):
+        pass
+
+    def parse_current_image_attrs(self):
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            image_srcs = group_srcs[str(self.identifier)]
+            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+            for index in range(1, current_object_index + 1):
+                #try:
+                    #points_vector = QVector()
+                    test_polygon = QPolygon()
+                    tmp_str1 = image_srcs.attrs[str(index)]
+                    tmp_str2 = re.sub(r' ', '', tmp_str1)
+                    tmp_list = re.findall(r'\([0-9]+,[0-9]+\)', tmp_str2)
+                    tuple_list = []
+                    qpoint_list = []
+                    for pair in tmp_list:
+                        tuple_list.append(make_tuple(pair))
+                    for int_pair in tuple_list:
+                        test_polygon.append(QPoint(int_pair[0], int_pair[1]))
+                        qpoint_list.append(QPoint(int_pair[0], int_pair[1]))
+                    for index in range(test_polygon.size()):
+                        print(test_polygon.point(index))
+
+                    #print(tmp_str1)
+                    print(tuple_list)
+                    #print(type(tuple_list[0][0]))
+                    print("\n\n")
+                    #print(test_polygon)
+                    #print(image_srcs.attrs[str(index)], index)
+                #except BaseException:
+                    #print("no object for index = ", index)
+            #image_srcs.attrs[str(current_object_index)] = str(self.canvas.mask_points)
+    
+
+
+
     def on_edit(self):
         self.drawing_dialog = draw.drawing_dialog(  canvas_pixmap=self.display.pixmap(),
                                                     canvas_geometry = self.display.geometry(),
                                                     window_geometry=self.geometry(),
-                                                    project_path = self.path,
+                                                    project_path = self.project_path,
                                                     identifier = self.identifier
                                                     )
         self.drawing_dialog.exec_()
@@ -237,7 +300,7 @@ class seg_window(QDialog):
 
     """
     def open_file(self):
-        self.hdf = h5py.File(self.path, 'w')
+        self.hdf = h5py.File(self.project_path, 'w')
         self.identifier_max = self.hdf.keys()
         print(self.identifier_max)
 
@@ -249,7 +312,7 @@ class seg_window(QDialog):
         self.clear_window_layout(self.image_layout)
         self.display = myLabel()
         self.display.setFixedSize(600,600)
-        with h5py.File(self.path, 'r') as hdf:
+        with h5py.File(self.project_path, 'r') as hdf:
             self.identifier_max = len(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys())) - 1 #starting with 0
             self.image_position_max = self.identifier_max + 1 #starting with 1
             print(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys()))

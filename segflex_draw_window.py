@@ -14,6 +14,8 @@ import numpy as np
 import cv2
 import segflex_classifier as classifier
 import copy
+import re
+
 
 class Canvas(QLabel):
     def __init__(self, parent=None, pixmap=None, mask=None):
@@ -27,14 +29,14 @@ class Canvas(QLabel):
         self.init_mask()
     
     def init_mask(self):
-        self.mask = QPolygonF()
-        self.mask_points_f = []
+        #self.mask = QPolygonF()
+        #self.mask_points_f = []
         self.mask_points = []
         #print("deep pixmap = ",id(self.pixmap), id(pixmap)) 
     
     def update_mask(self, point):
-        self.mask_points_f.append(QPointF(point))
-        self.mask.append(QPointF(point))
+        #self.mask_points_f.append(QPointF(point))
+        #self.mask.append(QPointF(point))
         self.mask_points.append(point)
 
     def set_pencil_instruments(self):
@@ -69,6 +71,8 @@ class Canvas(QLabel):
         painter.drawPolygon(self.mask)
 
     def fill_polygon(self):
+        pass
+    """
         self.pen = QtGui.QPen(QtGui.QColor(0,0,0))                      # set lineColor
         self.pen.setWidth(3)                                            # set lineWidth
         self.brush = QtGui.QBrush(QtGui.QColor(255,255,255,255))
@@ -86,16 +90,6 @@ class Canvas(QLabel):
         self.painter_path.addPolygon(self.mask)
         painter.fillPath(self.painter_path, Qt.black)
         self.setPixmap(self.pixmap)
-
-
-
-    """
-    def paintEvent(self, event):
-        # create a canvas
-        canvasPainter = QPainter(self)
-         
-        # draw rectangle  on the canvas
-        canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
     """
 
 
@@ -109,21 +103,22 @@ class drawing_dialog(QDialog):
                         window_geometry=None):
         QDialog.__init__(self, parent)
 
+        self.instrument_name = "<QPolygon>"
+        self.object_class = "__" + classifier.code_100[0] + "__"
         self.project_path = project_path
         self.identifier = identifier
         self.adjust_window(window_geometry)
         self.create_place_connect_classes_buttons()
         self.create_canvas(canvas_pixmap, canvas_geometry)
-        self.create_group_for_objects_on_image()
-        #print("deep pixmap = ",id(self.project_path), id(project_path)) 
-        self.create_control_btns()
+        self.create_control_buttons()
 
     def create_place_connect_classes_buttons(self):
 
         self.new_object_button = QPushButton("Новый объект класса")
         self.new_object_button.setCheckable(False)
         self.new_object_button.setChecked(False)
-        self.layout.addWidget(self.new_object_button, 1, 1)
+        self.new_object_button.clicked.connect(self.on_new_object_button)
+        #self.layout.addWidget(self.new_object_button, 1, 1)
 
         self.control_pencil_button = QPushButton("Включить/выключить рисование")
         self.control_pencil_button.setCheckable(True)
@@ -151,6 +146,8 @@ class drawing_dialog(QDialog):
                 self.layout.addWidget(button, i, 0)
                 i += 1
 
+    
+
     def on_draw_polygon_button(self):
         if self.canvas.mask:
             self.canvas.draw_polygon()
@@ -158,18 +155,23 @@ class drawing_dialog(QDialog):
     def on_fill_polygon_button(self):
         #self.painter_path = QPainterPath(self.)
         self.canvas.fill_polygon()
-        
+
+    def on_new_object_button(self): #ne nujna - vhodit v sohranit
+        #if self.canvas.mask_points:
+        #    self.on_save_mask_button()
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            image_srcs = group_srcs[str(self.identifier)]
+            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+            image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_object_index + 1)
 
 
-    
     def on_control_pencil_button(self, status):
         #print(status)
         if status == True:
             self.canvas.control_pencil = True
         else:
             self.canvas.control_pencil = False
-
-
 
     def on_toggled_classes_buttons(self, status):
         if status == True:
@@ -179,86 +181,93 @@ class drawing_dialog(QDialog):
             self.new_object_button.setCheckable(False)
             self.new_object_button.setChecked(False)
 
-        #print("btn pressed", status)
-
-    def create_group_for_objects_on_image(self):
-        with h5py.File(self.project_path, 'r+') as hdf:
-            parent_group = hdf[classifier.HDF_GROUP_OBJECT_LAYERS_NAME]
-            try:
-                parent_group[str(self.identifier)]
-            except BaseException:
-                parent_group.create_group(str(self.identifier))
-            print(parent_group)
-
-    def create_control_btns(self):
+    def create_control_buttons(self):
         
         print_mask_btn = QPushButton("Напечатать маску")
-        print_mask_btn.clicked.connect(self.print_mask)
+        print_mask_btn.clicked.connect(self.on_print_mask_button)
 
         clear_mask_btn = QPushButton("Очистить маску")
-        clear_mask_btn.clicked.connect(self.clear_mask)
+        clear_mask_btn.clicked.connect(self.on_clear_mask_button)
 
-        save_mask_btn = QPushButton("Сохранить маску в файл")
-        save_mask_btn.clicked.connect(self.save_mask)
+        test_save_btn = QPushButton("Тест сохранения")
+        test_save_btn.clicked.connect(self.on_test_save_btn)
 
-        self.layout.addWidget(save_mask_btn, 0, 2)
+        save_object_to_attrs_button = QPushButton("Сохранить объект как атрибут")
+        save_object_to_attrs_button.clicked.connect(self.on_save_object_to_attrs_button)
+
+        self.layout.addWidget(test_save_btn, 0, 2)
         self.layout.addWidget(print_mask_btn, 0, 1)
         self.layout.addWidget(clear_mask_btn, 0, 0)
+        self.layout.addWidget(save_object_to_attrs_button, 0, 3)
 
+    def on_save_object_to_attrs_button(self):
+        if self.canvas.mask_points:
+            with h5py.File(self.project_path, 'r+') as hdf:
+                group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+                image_srcs = group_srcs[str(self.identifier)]
+                current_attr_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+                current_attr_index += 1
+                image_srcs.attrs[str(current_attr_index)] = (self.identify_object_class() + 
+                                                            self.identify_drawing_instrument() + 
+                                                            self.prepare_coords_string_for_saving())
+                image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_attr_index)
+            self.canvas.mask_points.clear()
+        #self.
+        #self.canvas.mask_points_f.clear()
+        #self.canvas.mask.clear()                                  
 
-    #def convert_mask_to_numpy(self):
-
-
-    def save_mask(self):
+    def on_test_save_btn(self):
+        object_as_str_to_save_in_attrs = (self.identify_object_class() + 
+                                            self.identify_drawing_instrument() + 
+                                            self.prepare_coords_string_for_saving())
+        print(object_as_str_to_save_in_attrs)
+    """
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
-            print(image_srcs)
-            image_srcs.attrs[classifier.HDF_IMAGE_ATTR_NAME] = str(self.canvas.mask_points)
-            print(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_NAME])
-            """
-            group_features = hdf[classifier.HDF_GROUP_FEATURES_NAME]
+            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+            image_srcs.attrs[str(current_object_index)] = str(self.canvas.mask_points)
+            print(image_srcs.attrs[str(current_object_index)])
+        self.canvas.mask_points.clear()
+        self.canvas.mask_points_f.clear()
+        self.canvas.mask.clear()
+        self.new_object_button.setCheckable(True)
+        self.new_object_button.setChecked(False)
+    """
+    def on_print_mask_button(self):
+        with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
-            srcs_tuple = group_srcs[str(self.identifier)]
-            self.feature_shape = srcs_tuple[()].shape
-
+            image_srcs = group_srcs[str(self.identifier)]
+            number_of_objects = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX]) #objects starting from 1
+            for i in range(1, number_of_objects):
+                print("im object # ", i,  image_srcs.attrs[str(i)], "\n")
+            #number_of_objects += 1
+            #image_srcs.attrs[current_object_index] = str(self.canvas.mask_points)
+        #print(self.canvas.mask_points)
     
-            self.feature_base = np.random.rand(self.feature_shape[0], self.feature_shape[1], self.feature_shape[2])
-            
-            print(self.feature_base)
-            cv2.imshow("base_mask",self.feature_base)
-            """
-            #print(srcs_tuple[()])
-            #cv2.imshow("sd", srcs_tuple[()])
-            
-            #print(dataset_shape)
-            #mask_as_dataset = group_features[str(self.identifier)]
-            #print(mask_as_dataset)
-
-    def print_mask(self):
-        print(self.canvas.mask_points)
-    
-    def clear_mask(self): 
-        #painter = QPainter(self.canvas.pixmap)
-        #painter.eraseRect(self.canvas.rect())
-        #self.canvas.painter.eraseRect(self.canvas.rect())
+    def on_clear_mask_button(self): 
         self.canvas.mask.clear()
 
     def adjust_window(self, geometry):
         self.setWindowTitle("Разметка изображения")
         #self.setGeometry(geometry)  #SETGEOMETRY портит координаты
-        #self.layout = QHBoxLayout()
         self.layout = QGridLayout()
-        #self.image_layout = QHBoxLayout()
         self.setLayout(self.layout)
-        #self.layout.addLayout(self.image_layout, 2, 1) # правильно растянуть область изображения
 
-        #print(item)
-    
     def create_canvas(self, canvas_pixmap, canvas_geometry):
         self.canvas = Canvas(pixmap=canvas_pixmap)
-        #self.canvas.setPixmap(canvas_pixmap)
-        #self.canvas.setGeometry(canvas_geometry)
-        #self.image_layout.addWidget(self.canvas)
         self.layout.addWidget(self.canvas, 2,2)
+
+    def identify_object_class(self):
+        return self.object_class
+
+    def identify_drawing_instrument(self):
+        return self.instrument_name
+
+    def prepare_coords_string_for_saving(self):
+        base = str(self.canvas.mask_points)
+        rtn = re.sub(r'PyQt5.QtCore.QPoint', '', base) 
+        #print(rtn)
+
+        return rtn
     
