@@ -16,41 +16,57 @@ import segflex_classifier as classifier
 import segflex_draw_window as draw
 import re
 from ast import literal_eval as make_tuple
+import time
 
 
 class myLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__()
+        self.base_pixmap = QPixmap()
+        self.overlayed_pixmap = QPixmap()
+        self.toggle_show_hide_mask = False
+        self.polygon = QPolygon()
 
+    def update_base(self, pixmap):
+        self.base_pixmap = pixmap
+        self.overlayed_pixmap = pixmap
+        self.update()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            print(event.pos())
-            #pixmap = QPixmap()
-            #super().setPixmap(pixmap)
-            #self.drawing = True
-            #self.lastPoint = event.pos()
+        print(event.button())
+        self.update()
 
-    """
-    def mouseMoveEvent(self, event):
-        if (event.buttons() & Qt.LeftButton) & self.drawing:
-            painter = QPainter(self.canvas)
-            painter.setPen(QPen(self.brushColor, self.brushSize,
-                            Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            painter.drawLine(self.lastPoint, event.pos())
-            self.lastPoint = event.pos()
+    def overlay_mask(self, polygon):
+        print("overlay called")
+        self.toggle_show_hide_mask = True
+        self.polygon = polygon
+        self.repaint()
 
-            self.display.setPixmap(self.canvas)
-            #self.update()
+    def restore_srcs(self):
+        print("restore called")
+        self.toggle_show_hide_mask = False
+        self.repaint()
+    
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        pixmap = QPixmap()
+        if self.toggle_show_hide_mask:
+            pixmap = self.overlayed_pixmap
+        else:
+            pixmap = self.base_pixmap
+        if self.toggle_show_hide_mask:
+            painter2 = QPainter(pixmap)
+            painter2.drawPolygon(self.polygon)
+            self.overlayed_pixmap = pixmap
+            self.toggle_toggle()
+        painter.drawPixmap(0, 0, pixmap)
 
-    def mouseReleaseEvent(self, event):
- 
-        if event.button() == Qt.LeftButton:
-            # make drawing flag false
-            self.drawing = False
-            #self.display.setPixmap(self.canvas)
+    def toggle_toggle(self):
+        if self.toggle_show_hide_mask:
+            self.toggle_show_hide_mask = False
+        else:
+            self.toggle_show_hide_mask = True
 
-    """
 
 class seg_window(QDialog):
     def __init__(self, parent=None, path=None):
@@ -91,11 +107,10 @@ class seg_window(QDialog):
     def overlay_existing_mask(self):
         self.parse_current_image_attrs()
         print("objects parsed")
-        pass
 
     def hide_existing_mask(self):
+        self.display.restore_srcs()
         print("maska skrita")
-        pass
     
     def get_qvector_from_attr(self):
         pass
@@ -105,38 +120,27 @@ class seg_window(QDialog):
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
             current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+
             for index in range(1, current_object_index + 1):
-                #try:
-                    #points_vector = QVector()
-                    test_polygon = QPolygon()
+                    polygon = QPolygon()
                     tmp_str1 = image_srcs.attrs[str(index)]
                     tmp_str2 = re.sub(r' ', '', tmp_str1)
                     tmp_list = re.findall(r'\([0-9]+,[0-9]+\)', tmp_str2)
                     tuple_list = []
-                    qpoint_list = []
                     for pair in tmp_list:
                         tuple_list.append(make_tuple(pair))
                     for int_pair in tuple_list:
-                        test_polygon.append(QPoint(int_pair[0], int_pair[1]))
-                        qpoint_list.append(QPoint(int_pair[0], int_pair[1]))
-                    for index in range(test_polygon.size()):
-                        print(test_polygon.point(index))
+                        polygon.append(QPoint(int_pair[0], int_pair[1]))
 
-                    #print(tmp_str1)
-                    print(tuple_list)
-                    #print(type(tuple_list[0][0]))
-                    print("\n\n")
-                    #print(test_polygon)
-                    #print(image_srcs.attrs[str(index)], index)
-                #except BaseException:
-                    #print("no object for index = ", index)
-            #image_srcs.attrs[str(current_object_index)] = str(self.canvas.mask_points)
+                    self.display.overlay_mask(polygon)
+                    print("index = ", index, "curoi = ", current_object_index)
+
     
 
 
 
     def on_edit(self):
-        self.drawing_dialog = draw.drawing_dialog(  canvas_pixmap=self.display.pixmap(),
+        self.drawing_dialog = draw.drawing_dialog(  canvas_pixmap=self.display.base_pixmap,
                                                     canvas_geometry = self.display.geometry(),
                                                     window_geometry=self.geometry(),
                                                     project_path = self.project_path,
@@ -165,60 +169,7 @@ class seg_window(QDialog):
         self.brushColor = Qt.black
         self.lastPoint = QPoint()
 
-    """
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drawing = True
-            self.lastPoint = event.pos()
 
-    
-    def mouseMoveEvent(self, event):
-        if (event.buttons() & Qt.LeftButton) & self.drawing:
-            painter = QPainter(self.canvas)
-            painter.setPen(QPen(self.brushColor, self.brushSize,
-                            Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            painter.drawLine(self.lastPoint, event.pos())
-            self.lastPoint = event.pos()
-
-            self.display.setPixmap(self.canvas)
-            #self.update()
-
-    def mouseReleaseEvent(self, event):
- 
-        if event.button() == Qt.LeftButton:
-            # make drawing flag false
-            self.drawing = False
-            self.display.setPixmap(self.canvas)
-    """
-    
-    """
-    def paintEvent(self, event):
-        # create a canvas
-        canvasPainter = QPainter(self)
-         
-        # draw rectangle  on the canvas
-        canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
-    """
-
-
-    """
-    def drawing(self):
-        pixmap = QPixmap(self.display.pixmap())
-
-        self.drawing = False
-        self.brushSize = 2
-        self.brushColor = Qt.black
-        #pixmap.fill(Qt.transparent)
-        qp = QPainter(pixmap)
-        pen = QPen(Qt.red, 3)
-        qp.setPen(pen)
-        qp.drawLine(10, 10, 50, 50)
-        qp.end()
-        self.display.setPixmap(pixmap)
-
-        #self.create_image_area()
-        #self.initPre()
-    """
     def create_navigation_bar(self):
         navigation_bar = QToolBar()
 
@@ -325,28 +276,9 @@ class seg_window(QDialog):
             image_as_qimage = QImage(image_as_numpy, width, height, bytesPerLine, QImage.Format_RGB888)
             image_correct_rgb = image_as_qimage.rgbSwapped()
             image_as_pixmap = QPixmap(image_correct_rgb)
-            self.display.setPixmap(image_as_pixmap)
+            #self.display.setPixmap(image_as_pixmap)
+            self.display.update_base(image_as_pixmap)
             self.image_layout.addWidget(self.display)
-
-    """
-            
-    def create_image_area2(self):
-        self.image_index = 0
-        self.display = QLabel()
-        self.display.setMaximumSize(100,100)
-        #pixmap = QtGui.QPixmap(self.images_list[self.image_index])
-        self.image_adr = self.images_dir + "/" + self.images_list[self.image_index]
-                    #"C:\_python_pr\8.3_version_2_data_labeling\__images\image — копия (2).jpg"
-                    #"/__images/" + self.images_list[self.image_index]
-        print(self.image_adr)
-        self.pixmap = QtGui.QPixmap(self.image_adr)
-
-        self.display.setPixmap(self.pixmap)
-        #image = QImage(self.images_list[self.image_index])
-        #self.display.setPixmap(QPixmap.fromImage(image))
-        #f = open(self.images_list[self.image_imdex])
-        self.layout.addWidget(self.display)
-    """
 
 
     def open_images_dir(self):
