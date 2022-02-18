@@ -16,7 +16,6 @@ import segflex_classifier as classifier
 import segflex_draw_window as draw
 import re
 from ast import literal_eval as make_tuple
-import time
 
 
 class myLabel(QLabel):
@@ -28,44 +27,31 @@ class myLabel(QLabel):
         self.polygon = QPolygon()
 
     def update_base(self, pixmap):
-        self.base_pixmap = pixmap
-        self.overlayed_pixmap = pixmap
-        self.update()
-
-    def mousePressEvent(self, event):
-        print(event.button())
+        self.base_pixmap = pixmap.copy()
+        self.overlayed_pixmap = pixmap.copy()
         self.update()
 
     def overlay_mask(self, polygon):
-        print("overlay called")
         self.toggle_show_hide_mask = True
         self.polygon = polygon
         self.repaint()
 
     def restore_srcs(self):
-        print("restore called")
         self.toggle_show_hide_mask = False
         self.repaint()
     
     def paintEvent(self, event):
         painter = QPainter(self)
         pixmap = QPixmap()
-        if self.toggle_show_hide_mask:
-            pixmap = self.overlayed_pixmap
-        else:
+        if self.toggle_show_hide_mask == False:
             pixmap = self.base_pixmap
-        if self.toggle_show_hide_mask:
+        else:
+            pixmap = self.overlayed_pixmap
             painter2 = QPainter(pixmap)
             painter2.drawPolygon(self.polygon)
             self.overlayed_pixmap = pixmap
-            self.toggle_toggle()
-        painter.drawPixmap(0, 0, pixmap)
-
-    def toggle_toggle(self):
-        if self.toggle_show_hide_mask:
             self.toggle_show_hide_mask = False
-        else:
-            self.toggle_show_hide_mask = True
+        painter.drawPixmap(0, 0, pixmap)
 
 
 class seg_window(QDialog):
