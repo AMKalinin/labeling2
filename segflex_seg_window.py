@@ -60,15 +60,16 @@ class seg_window(QDialog):
         self.project_path = path
         self.identifier = 0
         self.current_image_position = 1
+        self.images_dir = classifier.IMAGES_FOLDER_NAME_FULL
        
         self.adjust_window()
-        self.open_images_dir()
+        #self.open_images_dir()
         self.open_image(self.identifier)
         self.create_navigation_bar()
         self.create_instruments_bar()
         self.create_control_btns()
-        self.draw_pencil_instruments()
-        print("shallow pixmap = ",id(self.display.pixmap()), id(self.display))
+        #self.draw_pencil_instruments()
+        #print("shallow pixmap = ",id(self.display.pixmap()), id(self.display))
         
     def create_control_btns(self):
         edit_btn = QPushButton("Сегментировать")
@@ -147,14 +148,14 @@ class seg_window(QDialog):
         #dots_instruments_btn.clicked.connect(self.draw_dots_instruments)
 
         self.layout.addWidget(instruments_bar, 1, 0)
-
+    """
     def draw_pencil_instruments(self):
         self.canvas = QPixmap(self.display.pixmap())
         self.drawing = False
         self.brushSize = 2
         self.brushColor = Qt.black
         self.lastPoint = QPoint()
-
+    """
 
     def create_navigation_bar(self):
         navigation_bar = QToolBar()
@@ -266,36 +267,38 @@ class seg_window(QDialog):
             self.display.update_base(image_as_pixmap)
             self.image_layout.addWidget(self.display)
 
-
+    """
     def open_images_dir(self):
-        self.images_dir = os.getcwd()
-        
-        self.images_dir += "/__images"
-        print(self.images_dir)
+        try:
+            self.images_list = os.listdir(self.images_dir)
+        except BaseException:
+            print("no '__images' folder, pls make & add images")
+            self.images_list = os.listdir(os.getcwd())
+    """
+    """
         if not os.path.exists(self.images_dir):
             print("no __images directory")
             os.mkdir(self.images_dir)
         self.images_list = os.listdir(self.images_dir)
-        print(self.images_list)
+    """
 
     def adjust_window(self):
         self.setWindowTitle("Выбор изображения")
         self.setFixedSize(800,800)
-        #self.layout = QHBoxLayout()
         self.layout = QGridLayout()
         self.image_layout = QHBoxLayout()
         self.setLayout(self.layout)
         self.layout.addLayout(self.image_layout, 2, 1) # правильно растянуть область изображения
-        
+    """    
     def initPre(self):
-        """
-        Initialize stuff that are shared by actions, menus, widgets etc.
-        """
+        
+        #Initialize stuff that are shared by actions, menus, widgets etc.
+        
         self.layout.addWidget(QToolBar('Document', objectName='document_toolbar'))
         self.layout.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
         self.layout.addWidget(QToolBar('View', objectName='view_toolbar'))
         self.layout.addWidget(QToolBar('Graphol', objectName='graphol_toolbar')) 
-    
+    """
     def clear_window_layout(self, layout):
         for i in reversed(range(layout.count())): 
             layout.itemAt(i).widget().setParent(None)
