@@ -13,45 +13,10 @@ import h5py
 import numpy as np
 import cv2
 import segflex_classifier as classifier
+import segflex_seg_label as seg_label
 import segflex_draw_window as draw
 import re
 from ast import literal_eval as make_tuple
-
-
-class myLabel(QLabel):
-    def __init__(self, parent=None):
-        super().__init__()
-        self.base_pixmap = QPixmap()
-        self.overlayed_pixmap = QPixmap()
-        self.toggle_show_hide_mask = False
-        self.polygon = QPolygon()
-
-    def update_base(self, pixmap):
-        self.base_pixmap = pixmap.copy()
-        self.overlayed_pixmap = pixmap.copy()
-        self.update()
-
-    def overlay_mask(self, polygon):
-        self.toggle_show_hide_mask = True
-        self.polygon = polygon
-        self.repaint()
-
-    def restore_srcs(self):
-        self.toggle_show_hide_mask = False
-        self.repaint()
-    
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        pixmap = QPixmap()
-        if self.toggle_show_hide_mask == False:
-            pixmap = self.base_pixmap
-        else:
-            pixmap = self.overlayed_pixmap
-            painter2 = QPainter(pixmap)
-            painter2.drawPolygon(self.polygon)
-            self.overlayed_pixmap = pixmap
-            self.toggle_show_hide_mask = False
-        painter.drawPixmap(0, 0, pixmap)
 
 
 class seg_window(QDialog):
@@ -63,46 +28,41 @@ class seg_window(QDialog):
         self.images_dir = classifier.IMAGES_FOLDER_NAME_FULL
        
         self.adjust_window()
-        #self.open_images_dir()
         self.open_image(self.identifier)
-        self.create_navigation_bar()
-        self.create_instruments_bar()
-        self.create_control_btns()
-        #self.draw_pencil_instruments()
-        #print("shallow pixmap = ",id(self.display.pixmap()), id(self.display))
+
+        self.CNB_create_navigation_bar()
+        self.CDIB_create_drawing_instrument_bar()
+        self.CCB_create_control_btns()
         
-    def create_control_btns(self):
+    def CCB_create_control_btns(self):
         edit_btn = QPushButton("Сегментировать")
         edit_btn.clicked.connect(self.on_edit)
 
         self.show_existing_mask_button = QPushButton("Показать маску")
         self.show_existing_mask_button.setCheckable(True)
         self.show_existing_mask_button.setChecked(False)
-        self.show_existing_mask_button.toggled["bool"].connect(self.on_show_existing_mask_button)
+        self.show_existing_mask_button.toggled["bool"].connect(self.CCB_on_show_existing_mask_button)
 
         self.layout.addWidget(edit_btn, 1, 2)
         self.layout.addWidget(self.show_existing_mask_button, 2, 2)
     
-    def on_show_existing_mask_button(self, status):
+    def CCB_on_show_existing_mask_button(self, status):
         if status == True:
             self.show_existing_mask_button.setChecked(True)
-            self.overlay_existing_mask()
+            self.CCB_overlay_existing_mask()
         else:
             self.show_existing_mask_button.setChecked(False)
-            self.hide_existing_mask()
+            self.CCB_hide_existing_mask()
 
-    def overlay_existing_mask(self):
-        self.parse_current_image_attrs()
+    def CCB_overlay_existing_mask(self):
+        self.CCB_parse_current_image_attrs()
         print("objects parsed")
 
-    def hide_existing_mask(self):
+    def CCB_hide_existing_mask(self):
         self.display.restore_srcs()
         print("maska skrita")
-    
-    def get_qvector_from_attr(self):
-        pass
 
-    def parse_current_image_attrs(self):
+    def CCB_parse_current_image_attrs(self):
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
@@ -134,30 +94,68 @@ class seg_window(QDialog):
                                                     identifier = self.identifier
                                                     )
         self.drawing_dialog.exec_()
-    
-    def create_instruments_bar(self):
-        instruments_bar = QToolBar()
 
-        dots_instruments_btn = QToolButton()
-        dots_instruments_icon = QIcon()
-        dots_instruments_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_DOTS_INSTRUMENT_FULL))
-        dots_instruments_btn.setIcon(dots_instruments_icon)
 
-        instruments_bar.addWidget(dots_instruments_btn)
+    def CDIB_create_drawing_instrument_bar(self):
+        drawing_instrument_bar = QToolBar()
 
-        #dots_instruments_btn.clicked.connect(self.draw_dots_instruments)
+        self.pencil_btn = QToolButton()
+        self.pencil_btn.setCheckable(True)
+        self.pencil_btn.setChecked(False)
+        pencil_icon = QIcon()
+        pencil_icon.addPixmap(QPixmap(classifier.ICON_PENCIL_TBTN_DRAW_INSTRUMENT_FULL))
+        self.pencil_btn.setIcon(pencil_icon)
 
-        self.layout.addWidget(instruments_bar, 1, 0)
-    """
-    def draw_pencil_instruments(self):
-        self.canvas = QPixmap(self.display.pixmap())
-        self.drawing = False
-        self.brushSize = 2
-        self.brushColor = Qt.black
-        self.lastPoint = QPoint()
-    """
+        self.polygon_btn = QToolButton()
+        self.polygon_btn.setCheckable(True)
+        self.polygon_btn.setChecked(False)
+        polygon_icon = QIcon()
+        polygon_icon.addPixmap(QPixmap(classifier.ICON_POLYGON_TBTN_DRAW_INSTRUMENT_FULL))
+        self.polygon_btn.setIcon(polygon_icon)
 
-    def create_navigation_bar(self):
+        self.cancel_btn = QToolButton()
+        self.cancel_btn.setEnabled(False)
+        cancel_btn = QIcon()
+        cancel_btn.addPixmap(QPixmap(classifier.ICON_CANCEL_TBTN_DRAW_INSTRUMENT_FULL))
+        self.cancel_btn.setIcon(cancel_btn)
+
+        drawing_instrument_bar.addWidget(self.pencil_btn)
+        drawing_instrument_bar.addWidget(self.polygon_btn)
+        drawing_instrument_bar.addWidget(self.cancel_btn)
+
+        self.pencil_btn.toggled["bool"].connect(self.CDIB_on_pencil_btn)
+        self.polygon_btn.toggled["bool"].connect(self.CDIB_on_polygon_btn)
+        self.cancel_btn.clicked.connect(self.CDIB_on_cancel_btn)
+
+        self.layout.addWidget(drawing_instrument_bar, 1, 1, 1, 2)
+
+    def CDIB_on_pencil_btn(self, checked):
+        if checked:
+            self.display.mode = 'pencil_drawing'
+        if not checked:
+            self.CDIB_discard_drawing()
+            self.cancel_btn.setCheckable(False)
+
+    def CDIB_on_polygon_btn(self, checked):
+        if checked:
+            self.display.mode = 'draw polygon'
+            self.cancel_btn.setEnabled(True)
+            self.display.repaint()
+        if not checked:
+            self.CDIB_discard_drawing()
+            self.cancel_btn.setDisabled(True)
+
+    def CDIB_on_cancel_btn(self, checked):
+        if self.display.new_polygon_points:
+            self.display.new_polygon_points.pop()
+        print("go back")
+
+    def CDIB_discard_drawing(self):
+        self.display.new_polygon_points.clear()
+        self.display.mode = 'display base'
+        self.display.repaint()
+
+    def CNB_create_navigation_bar(self):
         navigation_bar = QToolBar()
 
         previous_btn = QToolButton()
@@ -197,58 +195,49 @@ class seg_window(QDialog):
         navigation_bar.addWidget(to_last_btn)
         navigation_bar.addWidget(self.image_position_widget)
 
-        to_first_btn.clicked.connect(self.on_to_first)
-        previous_btn.clicked.connect(self.on_previous)
-        next_btn.clicked.connect(self.on_next)
-        to_last_btn.clicked.connect(self.on_to_last)
+        to_first_btn.clicked.connect(self.CNB_on_to_first)
+        previous_btn.clicked.connect(self.CNB_on_previous)
+        next_btn.clicked.connect(self.CNB_on_next)
+        to_last_btn.clicked.connect(self.CNB_on_to_last)
 
         self.layout.addWidget(navigation_bar, 0, 0, 1, 2)#, Qt.AlignTop)# | Qt.AlignHCenter) #области  
 
         
-    def on_to_first(self):
+    def CNB_on_to_first(self):
         if self.identifier != 0:
             self.identifier = 0
             self.current_image_position = 1
             self.open_image(self.identifier)
-            self.update_image_position_widget()
+            self.CNB_update_image_position_widget()
 
-    def on_to_last(self):
+    def CNB_on_to_last(self):
         if self.identifier != self.identifier_max:
             self.identifier = self.identifier_max
             self.current_image_position = self.image_position_max
             self.open_image(self.identifier)
-            self.update_image_position_widget()
+            self.CNB_update_image_position_widget()
 
-    def on_previous(self):
+    def CNB_on_previous(self):
         if self.identifier > 0:
             self.identifier -= 1
             self.current_image_position -= 1
             self.open_image(self.identifier)
-            self.update_image_position_widget()
+            self.CNB_update_image_position_widget()
 
-    def on_next(self):
+    def CNB_on_next(self):
         if self.identifier < self.identifier_max:
             self.identifier += 1
             self.current_image_position += 1
             self.open_image(self.identifier)
-            self.update_image_position_widget()
+            self.CNB_update_image_position_widget()
     
-    def update_image_position_widget(self):
+    def CNB_update_image_position_widget(self):
         self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
 
-    """
-    def open_file(self):
-        self.hdf = h5py.File(self.project_path, 'w')
-        self.identifier_max = self.hdf.keys()
-        print(self.identifier_max)
 
-    #def closeEvent(self, event):
-    #    self.hdf.close()
-    """
-
-    def open_image(self, identifier):  #каждый раз открываю проблема закрыть корректно файл, если один раз
+    def open_image(self, identifier): 
         self.clear_window_layout(self.image_layout)
-        self.display = myLabel()
+        self.display = seg_label.Label()
         self.display.setFixedSize(600,600)
         with h5py.File(self.project_path, 'r') as hdf:
             self.identifier_max = len(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys())) - 1 #starting with 0
@@ -263,24 +252,9 @@ class seg_window(QDialog):
             image_as_qimage = QImage(image_as_numpy, width, height, bytesPerLine, QImage.Format_RGB888)
             image_correct_rgb = image_as_qimage.rgbSwapped()
             image_as_pixmap = QPixmap(image_correct_rgb)
-            #self.display.setPixmap(image_as_pixmap)
             self.display.update_base(image_as_pixmap)
             self.image_layout.addWidget(self.display)
 
-    """
-    def open_images_dir(self):
-        try:
-            self.images_list = os.listdir(self.images_dir)
-        except BaseException:
-            print("no '__images' folder, pls make & add images")
-            self.images_list = os.listdir(os.getcwd())
-    """
-    """
-        if not os.path.exists(self.images_dir):
-            print("no __images directory")
-            os.mkdir(self.images_dir)
-        self.images_list = os.listdir(self.images_dir)
-    """
 
     def adjust_window(self):
         self.setWindowTitle("Выбор изображения")
@@ -289,16 +263,7 @@ class seg_window(QDialog):
         self.image_layout = QHBoxLayout()
         self.setLayout(self.layout)
         self.layout.addLayout(self.image_layout, 2, 1) # правильно растянуть область изображения
-    """    
-    def initPre(self):
-        
-        #Initialize stuff that are shared by actions, menus, widgets etc.
-        
-        self.layout.addWidget(QToolBar('Document', objectName='document_toolbar'))
-        self.layout.addWidget(QToolBar('Editor', objectName='editor_toolbar'))
-        self.layout.addWidget(QToolBar('View', objectName='view_toolbar'))
-        self.layout.addWidget(QToolBar('Graphol', objectName='graphol_toolbar')) 
-    """
+
     def clear_window_layout(self, layout):
         for i in reversed(range(layout.count())): 
             layout.itemAt(i).widget().setParent(None)
