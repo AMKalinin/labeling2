@@ -143,12 +143,15 @@ class seg_window(QDialog):
             self.display.repaint()
         if not checked:
             self.CDIB_discard_drawing()
+            self.display.update_base(self.display.base_pixmap)
             self.cancel_btn.setDisabled(True)
 
     def CDIB_on_cancel_btn(self, checked):
         if self.display.new_polygon_points:
             self.display.new_polygon_points.pop()
-        print("go back")
+            self.display.update_base(self.display.base_pixmap)
+            print("go back")
+            self.display.update()
 
     def CDIB_discard_drawing(self):
         self.display.new_polygon_points.clear()
@@ -178,14 +181,6 @@ class seg_window(QDialog):
         next_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_NEXT_FULL))
         next_btn.setIcon(next_icon)
 
-        """
-        dots_instruments_btn = QToolButton()
-        dots_instruments_icon = QIcon()
-        dots_instruments_icon.addPixmap(QPixmap(classifier.ICON_SEG_TBTN_DOTS_INSTRUMENT_FULL))
-        dots_instruments_btn.setIcon(dots_instruments_icon)
-
-        navigation_bar.addWidget(dots_instruments_btn)
-        """
         self.image_position_postfix = ' / ' + str(self.image_position_max) 
         self.image_position_widget = QLabel(str(self.current_image_position) + self.image_position_postfix) 
 

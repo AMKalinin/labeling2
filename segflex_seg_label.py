@@ -37,7 +37,7 @@ class Label(QLabel):
         self.overlayed_pixmap = pixmap.copy()
         self.new_polygon_pixmap = pixmap.copy()
 
-        self.update()
+        #self.update()
 
     def overlay_mask(self, polygon):
         self.polygon_for_iterations = polygon
@@ -53,8 +53,9 @@ class Label(QLabel):
         if event.button() == Qt.LeftButton:
             if self.mode == 'draw polygon':
                 self.new_polygon_points.append(event.pos())
-                self.new_polygon = QPolygon(self.new_polygon_points)
+                #self.new_polygon = QPolygon(self.new_polygon_points)
                 self.update()
+                self.update_base(self.base_pixmap)
     
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -70,6 +71,9 @@ class Label(QLabel):
             self.toggle_show_hide_mask = False
         elif self.mode == 'draw polygon':
             pixmap = self.new_polygon_pixmap
+            self.new_polygon = QPolygon(self.new_polygon_points)
             painter3 = QPainter(pixmap)
             painter3.drawPolygon(self.new_polygon)
         painter.drawPixmap(0, 0, pixmap)
+
+        
