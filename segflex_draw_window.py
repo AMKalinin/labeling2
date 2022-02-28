@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
                             QStatusBar)
 
-from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygonF, QPainterPath, QRegion
+from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygonF, QPainterPath, QRegion, QPolygon
 
 import os
 import h5py
@@ -22,49 +22,87 @@ class Canvas(QLabel):
         super().__init__()
         self.control_pencil = False
         self.pixmap = pixmap.copy()
+        self.pixmap_base = pixmap.copy()
         self.setPixmap(self.pixmap)
-        self.set_pencil_instruments()
-        #self.mask = copy.copy(mask)
-        #print("inner mask", self.mask, "outer mask", mask)
-        self.init_mask()
-    
-    def init_mask(self):
-        #self.mask = QPolygonF()
-        #self.mask_points_f = []
         self.mask_points = []
-        #print("deep pixmap = ",id(self.pixmap), id(pixmap)) 
+        self.set_pencil_instruments()
+        self.polygon = QPolygon()
+
+        self.mode_list = ([  'pencil_drawing', #0
+                                'polygon_drawing', #1
+                                'other_instrument_drawing', #2
+                                'base_image_displaying', #3
+                                'mask_displaying', #4
+                                'mask_object_adjusting', #5
+                                ])
+        self.mode = self.mode_list[3]
+
+    def redraw_base(self):
+        self.pixmap = self.pixmap_base.copy()
+        self.setPixmap(self.pixmap)
+
     
     def update_mask(self, point):
-        #self.mask_points_f.append(QPointF(point))
-        #self.mask.append(QPointF(point))
         self.mask_points.append(point)
 
     def set_pencil_instruments(self):
-        self.drawing = False
+        #self.drawing = False
         self.brushSize = 2
         self.brushColor = Qt.black
         self.lastPoint = QPoint()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drawing = True
-            self.lastPoint = event.pos()
-            self.update_mask(self.lastPoint)
+        if self.mode == 'pencil_drawing':
+            if event.button() == Qt.LeftButton:
+                #self.drawing = True
+                self.lastPoint = event.pos()
+                self.update_mask(self.lastPoint)
+        if self.mode == 'polygon_drawing':
+            if event.button() == Qt.LeftButton:
+                #point = event.pos()
+                
+                self.lastPoint = event.pos()
+                self.update_mask(self.lastPoint)
+                #print(self.mask_points.sort(key=lambda point:point.x()))
+                #print(sorted(self.mask_points, key=lambda point:point.x()))
+                self.redraw_base()
+                painter = QPainter(self.pixmap)
+                painter.setPen(QPen(self.brushColor, self.brushSize,
+                                    Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.drawPoint(self.lastPoint)
+                self.setPixmap(self.pixmap)
+
 
     def mouseMoveEvent(self, event):
-        if (event.buttons() & Qt.LeftButton) & self.drawing & self.control_pencil:
-            painter = QPainter(self.pixmap)
-            painter.setPen(QPen(self.brushColor, self.brushSize,
-                            Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
-            painter.drawLine(self.lastPoint, event.pos())
-            self.lastPoint = event.pos()
-            self.update_mask(self.lastPoint)
-            self.setPixmap(self.pixmap)
+        if self.mode == 'pencil_drawing':
+            if (event.buttons() & Qt.LeftButton): #& self.drawing & self.control_pencil:
+                painter = QPainter(self.pixmap)
+                painter.setPen(QPen(self.brushColor, self.brushSize,
+                                    Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.drawLine(self.lastPoint, event.pos())
+                self.lastPoint = event.pos()
+                self.update_mask(self.lastPoint)
+                self.setPixmap(self.pixmap)
+        if self.mode == 'polygon_drawing':
+            pass
+
+
+
 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drawing = False
+        if self.mode == 'pencil_drawing':
+            if event.button() == Qt.LeftButton:
+                #self.drawing = False
+                self.setPixmap(self.pixmap)
+    
+        if self.mode == 'polygon_drawing':
+            self.redraw_base()
+            self.polygon = QPolygon(self.mask_points)
+            
+            painter = QPainter(self.pixmap)
+            painter.drawPolygon(self.polygon)
             self.setPixmap(self.pixmap)
+    
 
     def draw_polygon(self):
         painter = QPainter(self.pixmap)
@@ -111,28 +149,31 @@ class drawing_dialog(QDialog):
         self.create_place_connect_classes_buttons()
         self.create_canvas(canvas_pixmap, canvas_geometry)
         self.create_control_buttons()
+        self.create_drawing_instrument_bar()
 
     def create_place_connect_classes_buttons(self):
 
+        """
         self.new_object_button = QPushButton("Новый объект класса")
         self.new_object_button.setCheckable(False)
         self.new_object_button.setChecked(False)
         self.new_object_button.clicked.connect(self.on_new_object_button)
         #self.layout.addWidget(self.new_object_button, 1, 1)
+        """
 
         self.control_pencil_button = QPushButton("Включить/выключить рисование")
         self.control_pencil_button.setCheckable(True)
         self.control_pencil_button.setChecked(False)
         self.control_pencil_button.toggled["bool"].connect(self.on_control_pencil_button)
-        self.layout.addWidget(self.control_pencil_button, 1, 2)
+        #self.layout.addWidget(self.control_pencil_button, 1, 2)
 
         self.draw_polygon_button = QPushButton("Нарисовать полигон")
         self.draw_polygon_button.clicked.connect(self.on_draw_polygon_button)
-        self.layout.addWidget(self.draw_polygon_button, 1, 3)
+        #self.layout.addWidget(self.draw_polygon_button, 1, 3)
 
         self.fill_polygon_button = QPushButton("Заполнить полигон")
         self.fill_polygon_button.clicked.connect(self.on_fill_polygon_button)
-        self.layout.addWidget(self.fill_polygon_button, 1, 4)
+        #self.layout.addWidget(self.fill_polygon_button, 1, 4)
 
         with h5py.File(self.project_path, 'r') as hdf:
             self.classes_list = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
@@ -142,7 +183,7 @@ class drawing_dialog(QDialog):
                 button = QPushButton(el)
                 button.setCheckable(True)
                 button.setChecked(False)
-                button.toggled["bool"].connect(self.on_toggled_classes_buttons)
+                #button.toggled["bool"].connect(self.on_toggled_classes_buttons)
                 self.layout.addWidget(button, i, 0)
                 i += 1
 
@@ -155,7 +196,7 @@ class drawing_dialog(QDialog):
     def on_fill_polygon_button(self):
         #self.painter_path = QPainterPath(self.)
         self.canvas.fill_polygon()
-
+    """
     def on_new_object_button(self): #ne nujna - vhodit v sohranit
         #if self.canvas.mask_points:
         #    self.on_save_mask_button()
@@ -164,14 +205,16 @@ class drawing_dialog(QDialog):
             image_srcs = group_srcs[str(self.identifier)]
             current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
             image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_object_index + 1)
-
+    """
 
     def on_control_pencil_button(self, status):
         #print(status)
         if status == True:
             self.canvas.control_pencil = True
+            self.canvas.mode = 'pencil_drawing'
         else:
             self.canvas.control_pencil = False
+            self.canvas.mode = 'else'
 
     def on_toggled_classes_buttons(self, status):
         if status == True:
@@ -195,9 +238,9 @@ class drawing_dialog(QDialog):
         save_object_to_attrs_button = QPushButton("Сохранить объект как атрибут")
         save_object_to_attrs_button.clicked.connect(self.on_save_object_to_attrs_button)
 
-        self.layout.addWidget(test_save_btn, 0, 2)
-        self.layout.addWidget(print_mask_btn, 0, 1)
-        self.layout.addWidget(clear_mask_btn, 0, 0)
+        #self.layout.addWidget(test_save_btn, 0, 2)
+        #self.layout.addWidget(print_mask_btn, 0, 1)
+        #wself.layout.addWidget(clear_mask_btn, 0, 0)
         self.layout.addWidget(save_object_to_attrs_button, 0, 3)
 
     def on_save_object_to_attrs_button(self):
@@ -247,6 +290,75 @@ class drawing_dialog(QDialog):
     
     def on_clear_mask_button(self): 
         self.canvas.mask.clear()
+
+
+    def create_drawing_instrument_bar(self):
+        drawing_instrument_bar = QToolBar()
+
+        self.pencil_btn = QToolButton()
+        self.pencil_btn.setCheckable(True)
+        self.pencil_btn.setChecked(False)
+        pencil_icon = QIcon()
+        pencil_icon.addPixmap(QPixmap(classifier.ICON_PENCIL_TBTN_DRAW_INSTRUMENT_FULL))
+        self.pencil_btn.setIcon(pencil_icon)
+
+        self.polygon_btn = QToolButton()
+        self.polygon_btn.setCheckable(True)
+        self.polygon_btn.setChecked(False)
+        polygon_icon = QIcon()
+        polygon_icon.addPixmap(QPixmap(classifier.ICON_POLYGON_TBTN_DRAW_INSTRUMENT_FULL))
+        self.polygon_btn.setIcon(polygon_icon)
+
+        self.cancel_btn = QToolButton()
+        self.cancel_btn.setEnabled(False)
+        #self.cancel_btn.setCheckable(False)
+        #self.cancel_btn.setChecked(False)
+        cancel_btn = QIcon()
+        cancel_btn.addPixmap(QPixmap(classifier.ICON_CANCEL_TBTN_DRAW_INSTRUMENT_FULL))
+        self.cancel_btn.setIcon(cancel_btn)
+
+
+        drawing_instrument_bar.addWidget(self.pencil_btn)
+        drawing_instrument_bar.addWidget(self.polygon_btn)
+        drawing_instrument_bar.addWidget(self.cancel_btn)
+
+
+        self.pencil_btn.toggled["bool"].connect(self.on_pencil_btn)
+        self.polygon_btn.toggled["bool"].connect(self.on_polygon_btn)
+        self.cancel_btn.clicked.connect(self.on_cancel_btn)
+
+        #self.layout.addLayout(drawing_instrument_bar, 1, 2)
+
+        self.layout.addWidget(drawing_instrument_bar, 1, 1, 1, 2)
+        #self.layout.addWidget(navigation_bar, 0, 0, 1, 2)#, Qt.AlignTop)# | Qt.AlignHCenter) #области 
+
+    def on_pencil_btn(self, checked):
+        if checked:
+            self.canvas.mode = 'pencil_drawing'
+        if not checked:
+            self.discard_drawing()
+            #self.cancel_btn.setCheckable(False)
+
+    def on_polygon_btn(self, checked):
+        if checked:
+            self.canvas.mode = 'polygon_drawing'
+            self.cancel_btn.setEnabled(True)
+        if not checked:
+            self.discard_drawing()
+            self.cancel_btn.setDisabled(True)
+
+    def on_cancel_btn(self, checked):
+        self.canvas.mask_points.pop()
+        print("go back")
+        
+
+
+
+        
+    def discard_drawing(self):
+        self.canvas.mask_points.clear()
+        self.canvas.redraw_base()
+        self.canvas.mode = 'base_image_displaying'
 
     def adjust_window(self, geometry):
         self.setWindowTitle("Разметка изображения")
