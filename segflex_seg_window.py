@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
-                            QStatusBar)
+                            QStatusBar, QMessageBox)
 
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygon
 
@@ -26,6 +26,8 @@ class seg_window(QDialog):
         self.identifier = 0
         self.current_image_position = 1
         self.images_dir = classifier.IMAGES_FOLDER_NAME_FULL
+        self.instrument_name = "<QPolygon>"
+        self.object_class = "__" + classifier.code_100[0] + "__"
        
         self.adjust_window()
         self.open_image(self.identifier)
@@ -115,36 +117,48 @@ class seg_window(QDialog):
 
         self.cancel_btn = QToolButton()
         self.cancel_btn.setEnabled(False)
-        cancel_btn = QIcon()
-        cancel_btn.addPixmap(QPixmap(classifier.ICON_CANCEL_TBTN_DRAW_INSTRUMENT_FULL))
-        self.cancel_btn.setIcon(cancel_btn)
+        cancel_icon = QIcon()
+        cancel_icon.addPixmap(QPixmap(classifier.ICON_CANCEL_TBTN_DRAW_INSTRUMENT_FULL))
+        self.cancel_btn.setIcon(cancel_icon)
+
+        self.save_to_attrs_btn = QToolButton()
+        self.save_to_attrs_btn.setEnabled(False)
+        save_to_attrs_icon = QIcon()
+        save_to_attrs_icon.addPixmap(QPixmap(classifier.ICON_SAVE_TO_ATTRS_TBTN_FULL))
+        self.save_to_attrs_btn.setIcon(save_to_attrs_icon)
 
         drawing_instrument_bar.addWidget(self.pencil_btn)
         drawing_instrument_bar.addWidget(self.polygon_btn)
         drawing_instrument_bar.addWidget(self.cancel_btn)
+        drawing_instrument_bar.addWidget(self.save_to_attrs_btn)
 
         self.pencil_btn.toggled["bool"].connect(self.CDIB_on_pencil_btn)
         self.polygon_btn.toggled["bool"].connect(self.CDIB_on_polygon_btn)
         self.cancel_btn.clicked.connect(self.CDIB_on_cancel_btn)
+        self.save_to_attrs_btn.clicked.connect(self.CDIB_on_save_to_attrs_btn)
 
         self.layout.addWidget(drawing_instrument_bar, 1, 1, 1, 2)
 
     def CDIB_on_pencil_btn(self, checked):
         if checked:
             self.display.mode = 'pencil_drawing'
+            self.save_to_attrs_btn.setEnabled(True)
         if not checked:
             self.CDIB_discard_drawing()
             self.cancel_btn.setCheckable(False)
+            self.save_to_attrs_btn.setEnabled(False)
 
     def CDIB_on_polygon_btn(self, checked):
         if checked:
             self.display.mode = 'draw polygon'
             self.cancel_btn.setEnabled(True)
+            self.save_to_attrs_btn.setEnabled(True)
             self.display.repaint()
         if not checked:
             self.CDIB_discard_drawing()
             self.display.update_base(self.display.base_pixmap)
-            self.cancel_btn.setDisabled(True)
+            self.cancel_btn.setEnabled(False)
+            self.save_to_attrs_btn.setEnabled(False)
 
     def CDIB_on_cancel_btn(self, checked):
         if self.display.new_polygon_points:
@@ -157,6 +171,35 @@ class seg_window(QDialog):
         self.display.new_polygon_points.clear()
         self.display.mode = 'display base'
         self.display.repaint()
+
+    def CDIB_on_save_to_attrs_btn(self):
+        message = QMessageBox()
+        if not self.display.new_polygon_points:
+            message.setText("No points in new polygon!")
+            message.exec_()
+        else:#
+            with h5py.File(self.project_path, 'r+') as hdf:
+                group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+                image_srcs = group_srcs[str(self.identifier)]
+                current_attr_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+                current_attr_index += 1
+                image_srcs.attrs[str(current_attr_index)] = (self.object_class + 
+                                                            self.instrument_name + 
+                                                            self.CDIB_prepare_coords_string_for_saving())
+                image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_attr_index)
+            self.display.new_polygon_points.clear() #
+            self.display.mode = 'display mask'
+            #self.display.repaint()
+            self.CCB_parse_current_image_attrs()
+            message.setText("New polygon added to mask")
+            message.exec_()
+
+    def CDIB_prepare_coords_string_for_saving(self):
+        base = str(self.display.new_polygon_points)
+        rtn = re.sub(r'PyQt5.QtCore.QPoint', '', base) 
+        #print(rtn)
+
+        return rtn
 
     def CNB_create_navigation_bar(self):
         navigation_bar = QToolBar()
