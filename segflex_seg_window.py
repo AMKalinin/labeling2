@@ -35,7 +35,7 @@ class seg_window(QDialog):
         self.CNB_create_navigation_bar()
         self.CDIB_create_drawing_instrument_bar()
         self.CCB_create_control_btns()
-        
+
     def CCB_create_control_btns(self):
         edit_btn = QPushButton("Сегментировать")
         edit_btn.clicked.connect(self.on_edit)
@@ -200,6 +200,17 @@ class seg_window(QDialog):
         #print(rtn)
 
         return rtn
+    """
+    def CPB_create_polygon_bar(self):
+        polygon_layout = QVBoxLayout()
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            image_srcs = group_srcs[str(self.identifier)]
+            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+
+            for index in range(1, current_object_index + 1):
+    """
+
 
     def CNB_create_navigation_bar(self):
         navigation_bar = QToolBar()
@@ -282,7 +293,7 @@ class seg_window(QDialog):
             self.image_position_max = self.identifier_max + 1 #starting with 1
             print(list(hdf[classifier.HDF_GROUP_SRCS_NAME].keys()))
             print(self.identifier_max)
-            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]                
             dataset = group_srcs[str(identifier)]
             image_as_numpy = dataset[()]
             height, width, channel = image_as_numpy.shape
