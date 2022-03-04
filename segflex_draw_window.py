@@ -176,7 +176,7 @@ class drawing_dialog(QDialog):
         #self.layout.addWidget(self.fill_polygon_button, 1, 4)
 
         with h5py.File(self.project_path, 'r') as hdf:
-            self.classes_list = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
+            self.classes_list = hdf.attrs[classifier.HDF_FILE_CLASSES]
             print("classes in project = ", self.classes_list)
             i = 1 
             for el in self.classes_list:
@@ -203,8 +203,8 @@ class drawing_dialog(QDialog):
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
-            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
-            image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_object_index + 1)
+            current_object_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
+            image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT] = str(current_object_index + 1)
     """
 
     def on_control_pencil_button(self, status):
@@ -248,12 +248,12 @@ class drawing_dialog(QDialog):
             with h5py.File(self.project_path, 'r+') as hdf:
                 group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
                 image_srcs = group_srcs[str(self.identifier)]
-                current_attr_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+                current_attr_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
                 current_attr_index += 1
                 image_srcs.attrs[str(current_attr_index)] = (self.identify_object_class() + 
                                                             self.identify_drawing_instrument() + 
                                                             self.prepare_coords_string_for_saving())
-                image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_attr_index)
+                image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT] = str(current_attr_index)
             self.canvas.mask_points.clear()
         #self.
         #self.canvas.mask_points_f.clear()
@@ -268,7 +268,7 @@ class drawing_dialog(QDialog):
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
-            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+            current_object_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
             image_srcs.attrs[str(current_object_index)] = str(self.canvas.mask_points)
             print(image_srcs.attrs[str(current_object_index)])
         self.canvas.mask_points.clear()
@@ -281,7 +281,7 @@ class drawing_dialog(QDialog):
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
-            number_of_objects = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX]) #objects starting from 1
+            number_of_objects = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT]) #objects starting from 1
             for i in range(1, number_of_objects):
                 print("im object # ", i,  image_srcs.attrs[str(i)], "\n")
             #number_of_objects += 1

@@ -68,7 +68,7 @@ class seg_window(QDialog):
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
-            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+            current_object_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
 
             for index in range(1, current_object_index + 1):
                     polygon = QPolygon()
@@ -181,12 +181,12 @@ class seg_window(QDialog):
             with h5py.File(self.project_path, 'r+') as hdf:
                 group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
                 image_srcs = group_srcs[str(self.identifier)]
-                current_attr_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+                current_attr_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
                 current_attr_index += 1
                 image_srcs.attrs[str(current_attr_index)] = (self.object_class + 
                                                             self.instrument_name + 
                                                             self.CDIB_prepare_coords_string_for_saving())
-                image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = str(current_attr_index)
+                image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT] = str(current_attr_index)
             self.display.new_polygon_points.clear() #
             self.display.mode = 'display mask'
             #self.display.repaint()
@@ -206,7 +206,7 @@ class seg_window(QDialog):
         with h5py.File(self.project_path, 'r+') as hdf:
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             image_srcs = group_srcs[str(self.identifier)]
-            current_object_index = int(image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX])
+            current_object_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
 
             for index in range(1, current_object_index + 1):
     """

@@ -55,9 +55,9 @@ class task_as_widget(QGroupBox):
 
         self.btn_open = QPushButton("Open")
 
-        self.btn_delete = QPushButton("Delete")
+        self.btn_delete = QPushButton("Удалить")
         self.btn_delete.clicked.connect(self.emit_delete_signal)
-        self.btn_edit = QPushButton("Edit")
+        self.btn_edit = QPushButton("Сегментировать")
         self.btn_edit.clicked.connect(self.on_edit)
         actions_bar = QComboBox()
         actions_bar.addItems(["do smth1", "do smth2"])
@@ -67,17 +67,17 @@ class task_as_widget(QGroupBox):
 
 
         layout_preview.addWidget(image)
-        layout_info.addWidget(info_number)
-        layout_info.addWidget(info_created_by)
-        layout_info.addWidget(info_last_update)
-        layout_status.addWidget(status)
-        layout_jobs.addWidget(jobs)
-        layout_actions.addWidget(self.btn_open)
+        #layout_info.addWidget(info_number)
+        #layout_info.addWidget(info_created_by)
+        #layout_info.addWidget(info_last_update)
+        #layout_status.addWidget(status)
+        #layout_jobs.addWidget(jobs)
 
+        #layout_actions.addWidget(self.btn_open)
         layout_actions.addWidget(self.btn_delete)
         layout_actions.addWidget(self.btn_edit)
 
-        layout_actions.addWidget(actions_bar)
+        #layout_actions.addWidget(actions_bar)
 
 
         self.setMaximumHeight(120)

@@ -36,9 +36,10 @@ class main_window(QMainWindow):
             if project_short_name.find(classifier.HDF_POSTFIX) != -1:
                 project_full_name = classifier.PROJECTS_FOLDER_FULL_NAME + '/' + project_short_name
                 with h5py.File(project_full_name, 'r') as hdf: #ATTRS???
-                    to_project_name = hdf.attrs[classifier.HDF_FILE_ATTR_NAME]
-                    to_project_classes = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
-                    project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes, path=project_full_name)
+                    project_name = hdf.attrs[classifier.HDF_FILE_NAME]
+                    project_classes = hdf.attrs[classifier.HDF_FILE_CLASSES]
+                    #project_task_count = hdf.attrs[]
+                    project_widget = project.project_as_widget(name=project_name, classes=project_classes, path=project_full_name)
                     project_widget.signal_parse_tasks.connect(self.parse_tasks)
                     self.layout_SArea.addWidget(project_widget)
 
@@ -51,8 +52,8 @@ class main_window(QMainWindow):
     def create_button_group(self):
         button_group = QGroupBox()
 
-        btn1 = QPushButton("Создать новый проект")
-        btn2 = QPushButton("Открыть проект")
+        btn1 = QPushButton("Создать новый файл проекта")
+        btn2 = QPushButton("Добавить проект из ...")
         btn3 = QPushButton("Создать проект на основе существующего")
 
         layout = QVBoxLayout()
@@ -187,7 +188,7 @@ class main_window(QMainWindow):
             if project_short_name.find(classifier.HDF_POSTFIX) != -1:
                 project_full_name = classifier.PROJECTS_FOLDER_FULL_NAME + '/' + project_short_name
                 with h5py.File(project_full_name, 'r') as hdf: #ATTRS???
-                    to_project_name = hdf.attrs[classifier.HDF_FILE_ATTR_NAME]
+                    to_project_name = hdf.attrs[classifier.HDF_FILE_NAME]
                     to_project_classes = hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES]
                     project_widget = project.project_as_widget(name=to_project_name, classes=to_project_classes, path=project_full_name)
                     self.layout_SArea.addWidget(project_widget)
@@ -195,10 +196,10 @@ class main_window(QMainWindow):
 
     def create_place_widgets_main_window(self):
         self.create_button_group()
-        self.create_button_group_2()
+        #self.create_button_group_2()
         self.create_button_group_3()
         self.create_table()
-        self.create_description("Here must be project description")
+        #self.create_description("Here must be project description")
 
 
     def adjust_main_window(self):

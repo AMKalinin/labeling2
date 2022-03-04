@@ -57,13 +57,15 @@ HDF_GROUP_FEATURES_NAME = '__features'
 HDF_GROUP_OBJECT_LAYERS_NAME = '__object_layers'
 HDF_POSTFIX = '.hdf5'
 
-HDF_FILE_ATTR_NAME = 'name'
-HDF_FILE_ATTR_CLASSES = 'classes'
-HDF_FILE_ATTR_TIME_C = 'time_created'
-HDF_FILE_ATTR_TIME_U = 'time_updated'
-HDF_FILE_ATTR_DESCRIPTION = 'description'
+HDF_FILE_NAME = 'name'
+HDF_FILE_CLASSES = 'classes'
+HDF_FILE_TIME_C = 'time_created'
+HDF_FILE_TIME_U = 'time_updated'
+HDF_FILE_DESCRIPTION = 'description'
+HDF_FILE_TASK_COUNT = 'task_count'
 
-HDF_IMAGE_ATTR_INDEX = '__outlines_index'
+HDF_TASK_POLYGON_COUNT = '__polygon_count'
+HDF_TASK_STATUS = '__task_status'
 
 
 import os

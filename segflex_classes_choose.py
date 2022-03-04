@@ -36,11 +36,11 @@ class classes_choose(QDialog):
         projects_dir = classifier.PROJECTS_FOLDER_FULL_NAME
         project_name = projects_dir + '/' + classifier.current_project.name + classifier.HDF_POSTFIX  #classifier.current_project.name
         with h5py.File(project_name, 'w-') as hdf:
-            hdf.attrs[classifier.HDF_FILE_ATTR_NAME] = classifier.current_project.name
-            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_C] = time.localtime()
-            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_U] = time.localtime()
-            hdf.attrs[classifier.HDF_FILE_ATTR_DESCRIPTION] = classifier.current_project.description
-            hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES] = classifier.current_project.classes
+            hdf.attrs[classifier.HDF_FILE_NAME] = classifier.current_project.name
+            hdf.attrs[classifier.HDF_FILE_TIME_C] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_TIME_U] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_DESCRIPTION] = classifier.current_project.description
+            hdf.attrs[classifier.HDF_FILE_CLASSES] = classifier.current_project.classes
             hdf.create_group(classifier.HDF_GROUP_SRCS_NAME)
             hdf.create_group(classifier.HDF_GROUP_FEATURES_NAME)
             #hdf.create_group(classifier.HDF_GROUP_OBJECT_LAYERS_NAME)
@@ -52,7 +52,7 @@ class classes_choose(QDialog):
                 print(image_as_numpy.shape)
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
                 image_srcs = image_group[str(identifier)]
-                image_srcs.attrs[classifier.HDF_IMAGE_ATTR_INDEX] = 0
+                image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT] = 0
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1
 
@@ -211,8 +211,8 @@ class classes_choose(QDialog):
         self.create_place_control_buttons()
 
     def on_btn_ok(self, event):
-        classifier.time_start = time.localtime()
-        classifier.time_last_change = time.localtime()
+        #classifier.time_start = time.localtime()
+        #classifier.time_last_change = time.localtime()
         self.create_new_project_file()
         self.signal1.emit()
         #print(classifier.current_project.classes)
@@ -222,11 +222,12 @@ class classes_choose(QDialog):
         projects_dir = classifier.PROJECTS_FOLDER_FULL_NAME
         project_name = projects_dir + '/' + classifier.current_project.name + classifier.HDF_POSTFIX  #classifier.current_project.name
         with h5py.File(project_name, 'w-') as hdf:
-            hdf.attrs[classifier.HDF_FILE_ATTR_NAME] = classifier.current_project.name
-            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_C] = time.localtime()
-            hdf.attrs[classifier.HDF_FILE_ATTR_TIME_U] = time.localtime()
-            hdf.attrs[classifier.HDF_FILE_ATTR_DESCRIPTION] = classifier.current_project.description
-            hdf.attrs[classifier.HDF_FILE_ATTR_CLASSES] = classifier.current_project.classes
+            hdf.attrs[classifier.HDF_FILE_NAME] = classifier.current_project.name
+            hdf.attrs[classifier.HDF_FILE_TIME_C] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_TIME_U] = time.localtime()
+            hdf.attrs[classifier.HDF_FILE_DESCRIPTION] = classifier.current_project.description
+            hdf.attrs[classifier.HDF_FILE_CLASSES] = classifier.current_project.classes
+            hdf.attrs[classifier.HDF_FILE_TASK_COUNT] = 0
             hdf.create_group(classifier.HDF_GROUP_SRCS_NAME)
             hdf.create_group(classifier.HDF_GROUP_FEATURES_NAME)
             image_group = hdf.require_group(classifier.HDF_GROUP_SRCS_NAME)
@@ -238,6 +239,7 @@ class classes_choose(QDialog):
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1
+                hdf.attrs[classifier.HDF_FILE_TASK_COUNT] += 1
 
             #file_dialog = QFileDialog.getOpenFileName()[0]
             #print(file_dialog)
