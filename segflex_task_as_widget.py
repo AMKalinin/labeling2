@@ -105,6 +105,6 @@ class task_as_widget(QGroupBox):
 
     def on_edit(self):
         pass
-        #self.seg_window = seg_window.seg_window(self, self.path)
-        #self.seg_window.exec_()
+        self.seg_window = seg_window.seg_window(self, self.project_path)
+        self.seg_window.exec_()
 
