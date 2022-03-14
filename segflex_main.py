@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox,
-                            QFileDialog)
+                            QFileDialog, QSplitter)
 
 import segflex_new_project
 import segflex_project_as_widget as project
@@ -126,11 +126,21 @@ class main_window(QMainWindow):
         self.layout_tasks_box = QVBoxLayout(widget2)
         #self.parse_tasks()
 
+        self.scrollarea3 = QScrollArea(self)
+        self.scrollarea3.setWidgetResizable(True)
+        widget3 = QWidget(self.scrollarea3)
+        self.scrollarea3.setWidget(widget3)
+        self.layout_tasks_box2 = QVBoxLayout(widget3)
+
         tab2 = QWidget()
         tab3 = QWidget()
 
+        split = QSplitter()
+        split.addWidget(self.scrollarea2)
+        split.addWidget(self.scrollarea3)
+
         self.table.addTab(self.scrollarea, "Проекты")
-        self.table.addTab(self.scrollarea2, "Задачи")
+        self.table.addTab(split, "Задачи")
         self.table.addTab(tab3, "Просмотр")
 
         #self.main_layout.addWidget(self.scrollarea, 1, 0, 3, 1)
