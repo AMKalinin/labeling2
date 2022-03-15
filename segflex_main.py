@@ -121,14 +121,19 @@ class main_window(QMainWindow):
         #widget.adjustSize()
         self.scrollarea2 = QScrollArea(self)
         self.scrollarea2.setWidgetResizable(True)
-        widget2 = QWidget(self.scrollarea2)
+        #widget2 = QWidget(self.scrollarea2)
+        widget2 = QGroupBox(self.scrollarea2)
+        widget2.setTitle("Разметка")
+        
         self.scrollarea2.setWidget(widget2)
         self.layout_tasks_box = QVBoxLayout(widget2)
         #self.parse_tasks()
 
         self.scrollarea3 = QScrollArea(self)
         self.scrollarea3.setWidgetResizable(True)
-        widget3 = QWidget(self.scrollarea3)
+        #widget3 = QWidget(self.scrollarea3)
+        widget3 = QGroupBox(self.scrollarea3)
+        widget3.setTitle("Контроль и редактирование")
         self.scrollarea3.setWidget(widget3)
         self.layout_tasks_box2 = QVBoxLayout(widget3)
 
@@ -144,7 +149,7 @@ class main_window(QMainWindow):
         self.table.addTab(tab3, "Просмотр")
 
         #self.main_layout.addWidget(self.scrollarea, 1, 0, 3, 1)
-        self.main_layout.addWidget(self.table, 1, 0, 3, 1)
+        self.main_layout.addWidget(self.table, 0, 0, 4, 1)
 
     def create_description(self, file_description=""): #рамка? фон? форматирование описания?
         description = QLabel(file_description)

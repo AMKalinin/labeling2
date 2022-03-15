@@ -55,9 +55,9 @@ class task_as_widget(QGroupBox):
 
         self.btn_open = QPushButton("Open")
 
-        self.btn_delete = QPushButton("Удалить")
+        self.btn_delete = QPushButton("Отправить модератору")
         self.btn_delete.clicked.connect(self.emit_delete_signal)
-        self.btn_edit = QPushButton("Сегментировать")
+        self.btn_edit = QPushButton("Разметить")
         self.btn_edit.clicked.connect(self.on_edit)
         actions_bar = QComboBox()
         actions_bar.addItems(["do smth1", "do smth2"])
@@ -74,8 +74,9 @@ class task_as_widget(QGroupBox):
         #layout_jobs.addWidget(jobs)
 
         #layout_actions.addWidget(self.btn_open)
-        layout_actions.addWidget(self.btn_delete)
         layout_actions.addWidget(self.btn_edit)
+        layout_actions.addWidget(self.btn_delete)
+        
 
         #layout_actions.addWidget(actions_bar)
 
@@ -100,7 +101,7 @@ class task_as_widget(QGroupBox):
 
     def emit_delete_signal(self):
         #self.Signal_OneParameter.emit("date_str")
-        #self.deleteLater()
+        self.deleteLater()
         pass
 
     def on_edit(self):
