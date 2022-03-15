@@ -168,7 +168,12 @@ class main_window(QMainWindow):
             number_of_images = len(group_srcs.keys())
             for number in range(number_of_images):
                 task_widget = task.task_as_widget(classes=[], path=project_path, identifier=number)
-                self.layout_tasks_box.addWidget(task_widget)
+                status = group_srcs[str(number)].attrs[classifier.HDF_TASK_STATUS]
+                print(status)
+                if status == classifier.HDF_TASK_STATUS_0 or status == classifier.HDF_TASK_STATUS_1:
+                    self.layout_tasks_box.addWidget(task_widget)
+                if status == classifier.HDF_TASK_STATUS_2 or status == classifier.HDF_TASK_STATUS_3:
+                    self.layout_tasks_box2.addWidget(task_widget)
             self.table.setCurrentWidget(self.scrollarea2)
             print(number_of_images, " __ ", project_path)
 

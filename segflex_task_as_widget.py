@@ -49,7 +49,8 @@ class task_as_widget(QGroupBox):
         info_created_by = QLabel("Created by Hashly on November 1st 2021")
         info_last_update = QLabel("Last updated 15 days ago")
 
-        status = QLabel(" ".join(str(classes)))
+        #status = QLabel(" ".join(str(classes)))
+        self.task_status = QLabel(self.update_info())
 
         jobs = QLabel("0 of 1 jobs")
 
@@ -67,7 +68,7 @@ class task_as_widget(QGroupBox):
 
 
         layout_preview.addWidget(image)
-        #layout_info.addWidget(info_number)
+        layout_info.addWidget(self.task_status)
         #layout_info.addWidget(info_created_by)
         #layout_info.addWidget(info_last_update)
         #layout_status.addWidget(status)
@@ -83,6 +84,13 @@ class task_as_widget(QGroupBox):
 
         self.setMaximumHeight(120)
         self.setLayout(layout)
+
+    def update_info(self):
+        with h5py.File(self.project_path, 'r') as hdf:
+            group = hdf[classifier.HDF_GROUP_SRCS_NAME]                
+            task = group[str(self.identifier)]
+            return task.attrs[classifier.HDF_TASK_STATUS]
+
 
     def create_previw(self): 
         with h5py.File(self.project_path, 'r') as hdf:
@@ -101,6 +109,10 @@ class task_as_widget(QGroupBox):
 
     def emit_delete_signal(self):
         #self.Signal_OneParameter.emit("date_str")
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group = hdf[classifier.HDF_GROUP_SRCS_NAME]                
+            task = group[str(self.identifier)]
+            task.attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_2
         self.deleteLater()
         pass
 

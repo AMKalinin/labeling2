@@ -187,6 +187,9 @@ class seg_window(QDialog):
                                                             self.instrument_name + 
                                                             self.CDIB_prepare_coords_string_for_saving())
                 image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT] = str(current_attr_index)
+                if image_srcs.attrs[classifier.HDF_TASK_STATUS] == classifier.HDF_TASK_STATUS_0:
+                    image_srcs.attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_1 #изменение статуса туду - ин ворк
+                    print("changed status")
             self.display.new_polygon_points.clear() #
             self.display.mode = 'display mask'
             #self.display.repaint()
