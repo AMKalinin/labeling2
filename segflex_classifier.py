@@ -66,6 +66,11 @@ HDF_FILE_TASK_COUNT = 'task_count'
 
 HDF_TASK_POLYGON_COUNT = '__polygon_count'
 HDF_TASK_STATUS = '__task_status'
+HDF_TASK_STATUS_0 = 'to do' #при создании файла проекта, при добавлении задачи
+HDF_TASK_STATUS_1 = 'in progress' #у задачи есть хотя бы один атрибут маски
+HDF_TASK_STATUS_2 = 'review' #нажата кнопка отправить на проверку
+HDF_TASK_STATUS_3 = 'done' #модератор нажал кнопку 
+
 
 
 import os

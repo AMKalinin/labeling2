@@ -120,6 +120,8 @@ class project_as_widget(QGroupBox):
                 task_count = hdf.attrs[classifier.HDF_FILE_TASK_COUNT]
                 task_as_numpy = cv2.imread(task_to_add)
                 group_srcs.create_dataset(str(task_count), data=task_as_numpy)
+                group_srcs[str(task_count)].attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_0
+                group_srcs[str(task_count)].attrs[classifier.HDF_TASK_POLYGON_COUNT] = 0
                 hdf.attrs[classifier.HDF_FILE_TASK_COUNT] += 1
             self.signal_parse_tasks.emit(self.path)
 
