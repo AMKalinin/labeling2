@@ -8,7 +8,9 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
 
 import segflex_new_project
 import segflex_project_as_widget as project
-import segflex_task_as_widget as task
+import segflex_task_as_widget_to_do as task_todo
+import segflex_task_as_widget_to_check as task_tocheck
+import segflex_task_as_widget as task_base
 import os
 import json
 import segflex_classifier as classifier
@@ -17,6 +19,7 @@ import time
 
 
 class main_window(QMainWindow):
+    signal_reparse = pyqtSignal(str)
 
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent, flags=QtCore.Qt.Window)
@@ -26,6 +29,7 @@ class main_window(QMainWindow):
         self.adjust_main_window()
         #self.check_projects_folder()
         self.create_place_widgets_main_window()
+        self.signal_reparse.connect(self.parse_tasks)
 
 
     def parse_projects_folder(self):
@@ -39,8 +43,9 @@ class main_window(QMainWindow):
                     project_name = hdf.attrs[classifier.HDF_FILE_NAME]
                     project_classes = hdf.attrs[classifier.HDF_FILE_CLASSES]
                     #project_task_count = hdf.attrs[]
-                    project_widget = project.project_as_widget(name=project_name, classes=project_classes, path=project_full_name)
-                    project_widget.signal_parse_tasks.connect(self.parse_tasks)
+                    project_widget = project.project_as_widget(name=project_name, classes=project_classes, path=project_full_name, signal= self.signal_reparse)
+                    #project_widget.signal_parse_tasks.connect(self.parse_tasks)
+                    #self.signal_reparse.connect(self.parse_tasks)
                     self.layout_SArea.addWidget(project_widget)
 
 
@@ -163,20 +168,29 @@ class main_window(QMainWindow):
 
     def parse_tasks(self, project_path):
         self.clear_table_layout(layout=self.layout_tasks_box)
+        self.clear_table_layout(layout=self.layout_tasks_box2)
         with h5py.File(project_path, 'r') as hdf: #ATTRS???
             group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
             number_of_images = len(group_srcs.keys())
             for number in range(number_of_images):
-                task_widget = task.task_as_widget(classes=[], path=project_path, identifier=number)
                 status = group_srcs[str(number)].attrs[classifier.HDF_TASK_STATUS]
-                print(status)
                 if status == classifier.HDF_TASK_STATUS_0 or status == classifier.HDF_TASK_STATUS_1:
+                    task_widget = task_base.task_widget(path=project_path, identifier=number, mode=classifier.TASK_WIDGET_MODE_0, signal=self.signal_reparse)
                     self.layout_tasks_box.addWidget(task_widget)
                 if status == classifier.HDF_TASK_STATUS_2 or status == classifier.HDF_TASK_STATUS_3:
+                    task_widget = task_base.task_widget(path=project_path, identifier=number, mode=classifier.TASK_WIDGET_MODE_1, signal=self.signal_reparse)
                     self.layout_tasks_box2.addWidget(task_widget)
+                #task_widget.signal_reparse.connect(self.callreparse(project_path))
             self.table.setCurrentWidget(self.scrollarea2)
-            print(number_of_images, " __ ", project_path)
+            
+        print(number_of_images, " _2_ ", project_path)
 
+    def testPriunt(self):
+        
+        print("asd")
+
+    def callreparse(self, project_path):
+        self.parse_tasks(project_path)
 
     """
     def open_image(self, identifier): 

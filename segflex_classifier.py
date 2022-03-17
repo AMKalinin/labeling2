@@ -72,6 +72,10 @@ HDF_TASK_STATUS_2 = 'review' #нажата кнопка отправить на 
 HDF_TASK_STATUS_3 = 'done' #модератор нажал кнопку 
 
 
+TASK_WIDGET_MODE_0 = 'to do'
+TASK_WIDGET_MODE_1 = 'to check'
+
+
 
 import os
 

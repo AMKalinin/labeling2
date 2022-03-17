@@ -12,85 +12,73 @@ import segflex_classifier as classifier
 import h5py
 
 
-class task_as_widget(QGroupBox):
-    #Signal_OneParameter = pyqtSignal(str)
-
-    def __init__(self,
-    classes,
-    path,
-    identifier,
-    parent=None,
-    ide=0):
-        #QGroupBox.__init__(self, name, classes, parent, ide)
+class task_widget(QGroupBox):
+    def __init__(self, path, identifier, mode, signal):
         super().__init__()
         self.project_path = path
         self.identifier = identifier
+        self.mode = mode
+        self.signal = signal
+        self.unit_ui()
 
-        layout = QHBoxLayout()
-        layout_preview = QVBoxLayout()
-        layout_info = QVBoxLayout()
-        layout_status = QVBoxLayout()
-        layout_jobs = QVBoxLayout()
-        layout_actions =QVBoxLayout()
+    def unit_ui(self):
+        self.create_layouts()
+        self.fill_layouts()
+        self.place_layouts()
+        self.adjust_window()
 
-        layout.addLayout(layout_preview)
-        layout.addLayout(layout_info)
-        layout.addLayout(layout_status)
-        layout.addLayout(layout_jobs)
-        layout.addLayout(layout_actions)
+    def create_layouts(self):
+        self.layout = QHBoxLayout()
+        self.layout_preview = QVBoxLayout()
+        self.layout_info = QVBoxLayout()
+        self.layout_actions =QVBoxLayout()
 
+    def fill_layouts(self):
+        self.fill_preview()
+        self.fill_info()
+        self.fill_actions()
 
-        image = QLabel(self)
-        pixmap = self.create_previw()
-        image.setPixmap(pixmap)
-        #image.setFixedSize(100, 100)
-
-        info_number = QLabel("#" + str(ide) )#+ name)
-        info_created_by = QLabel("Created by Hashly on November 1st 2021")
-        info_last_update = QLabel("Last updated 15 days ago")
-
-        #status = QLabel(" ".join(str(classes)))
-        self.task_status = QLabel(self.update_info())
-
-        jobs = QLabel("0 of 1 jobs")
-
-        self.btn_open = QPushButton("Open")
-
-        self.btn_delete = QPushButton("Отправить модератору")
-        self.btn_delete.clicked.connect(self.emit_delete_signal)
-        self.btn_edit = QPushButton("Разметить")
-        self.btn_edit.clicked.connect(self.on_edit)
-        actions_bar = QComboBox()
-        actions_bar.addItems(["do smth1", "do smth2"])
-
-        btn_id_in_layout = QPushButton("print id")
-        #btn_id_in_layout.clicked.connect()
+    def place_layouts(self):
+        self.layout.addLayout(self.layout_preview)
+        self.layout.addLayout(self.layout_info)
+        self.layout.addLayout(self.layout_actions)
+        self.layout_preview.addWidget(self.preview)
+        self.layout_info.addWidget(self.info_number)
+        self.layout_info.addWidget(self.info_created_by)
+        self.layout_info.addWidget(self.info_last_update)
+        if self.mode == classifier.TASK_WIDGET_MODE_0:
+            self.layout_actions.addWidget(self.btn_edit)
+            self.layout_actions.addWidget(self.btn_tocheck)
+        if self.mode == classifier.TASK_WIDGET_MODE_1:
+            self.layout_actions.addWidget(self.btn_redo)
+            self.layout_actions.addWidget(self.btn_done)
 
 
-        layout_preview.addWidget(image)
-        layout_info.addWidget(self.task_status)
-        #layout_info.addWidget(info_created_by)
-        #layout_info.addWidget(info_last_update)
-        #layout_status.addWidget(status)
-        #layout_jobs.addWidget(jobs)
-
-        #layout_actions.addWidget(self.btn_open)
-        layout_actions.addWidget(self.btn_edit)
-        layout_actions.addWidget(self.btn_delete)
-        
-
-        #layout_actions.addWidget(actions_bar)
-
-
+    def adjust_window(self):
         self.setMaximumHeight(120)
-        self.setLayout(layout)
+        self.setLayout(self.layout)
+    
+    def fill_preview(self):
+        self.preview = QLabel(self)
+        pixmap = self.create_previw()
+        self.preview.setPixmap(pixmap)
 
-    def update_info(self):
-        with h5py.File(self.project_path, 'r') as hdf:
-            group = hdf[classifier.HDF_GROUP_SRCS_NAME]                
-            task = group[str(self.identifier)]
-            return task.attrs[classifier.HDF_TASK_STATUS]
+    def fill_info(self):
+        self.info_number = QLabel("#" )#+ name)
+        self.info_created_by = QLabel("Created by Hashly on November 1st 2021")
+        self.info_last_update = QLabel("Last updated 15 days ago")
 
+    def fill_actions(self):
+        if self.mode == classifier.TASK_WIDGET_MODE_0:
+            self.btn_tocheck = QPushButton("Отправить модератору")
+            self.btn_tocheck.clicked.connect(self.on_tocheck)
+            self.btn_edit = QPushButton("Разметить")
+            self.btn_edit.clicked.connect(self.on_edit)
+        if self.mode == classifier.TASK_WIDGET_MODE_1:
+            self.btn_redo = QPushButton("Вернуть на доработку")
+            self.btn_redo.clicked.connect(self.on_redo)
+            self.btn_done = QPushButton("Готово")
+            self.btn_done.clicked.connect(self.on_edit)
 
     def create_previw(self): 
         with h5py.File(self.project_path, 'r') as hdf:
@@ -106,6 +94,32 @@ class task_as_widget(QGroupBox):
 
             return image_resized
 
+    def on_redo(self):
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group = hdf[classifier.HDF_GROUP_SRCS_NAME]                
+            task = group[str(self.identifier)]
+            task.attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_1
+        self.signal.emit(self.project_path)
+
+    def on_done(self):
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group = hdf[classifier.HDF_GROUP_SRCS_NAME]                
+            task = group[str(self.identifier)]
+            task.attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_3
+        self.signal.emit(self.project_path)
+
+    def on_tocheck(self):
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group = hdf[classifier.HDF_GROUP_SRCS_NAME]                
+            task = group[str(self.identifier)]
+            task.attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_2
+        self.signal.emit(self.project_path)
+
+    def on_edit(self):
+        pass
+        self.seg_window = seg_window.seg_window(self, self.project_path)
+        self.seg_window.exec_()
+
 
     def emit_delete_signal(self):
         #self.Signal_OneParameter.emit("date_str")
@@ -116,8 +130,6 @@ class task_as_widget(QGroupBox):
         self.deleteLater()
         pass
 
-    def on_edit(self):
-        pass
-        self.seg_window = seg_window.seg_window(self, self.project_path)
-        self.seg_window.exec_()
+
+
 
