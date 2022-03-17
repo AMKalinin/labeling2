@@ -33,13 +33,20 @@ class allTree(QTreeWidget):
             return
         if widget.parent() is None:
             ind = event.source().indexOfTopLevelItem(widget)
-            text = widget.child(0).text(1) + '_' + widget.child(0).text(0)
-        else:
-            ind = event.source().indexOfTopLevelItem(widget.parent())
-            text = widget.text(1) + '_' + widget.text(0)
-        if text in classifier.current_project.classes:
-            classifier.current_project.classes.remove(text)
+            for i in range(widget.childCount()):
+                text = widget.child(i).text(1) + '_' + widget.child(i).text(0)
+                if text in classifier.current_project.classes:
+                    classifier.current_project.classes.remove(text)
             event.source().takeTopLevelItem(ind)
+        else:
+            text = widget.text(1) + '_' + widget.text(0)
+            if text in classifier.current_project.classes:
+                classifier.current_project.classes.remove(text)
+                if widget.parent().childCount() <= 1:
+                    ind = event.source().indexOfTopLevelItem(widget.parent())
+                    event.source().takeTopLevelItem(ind)
+                    return
+                widget.parent().removeChild(widget)
         event.accept()
 
 
@@ -57,15 +64,21 @@ class selectedTree(allTree):
                 return QTreeWidgetItem([item.text(0), item.text(1)])
             return get_parent(item.parent())
 
+        def struct(tree, item):
+            match = tree.findItems(item.text(1)[0], Qt.MatchStartsWith | Qt.MatchRecursive, 1)
+            if len(match) > 0:
+                match[0].parent().addChild(QTreeWidgetItem([item.text(0), item.text(1)]))
+                return 1
+            return 0
+
         if event.source().indexOfTopLevelItem(widget) >= 0:
             return
 
         if text not in classifier.current_project.classes:
             classifier.current_project.classes.append(text)
-
-            par = get_parent(widget)
-            par.addChild(QTreeWidgetItem([widget.text(0), widget.text(1)]))
-            self.addTopLevelItem(par)
-            self.expandItem(par)
-            self.setCurrentItem(par)
-            event.accept()
+            if struct(self, widget) == 0:
+                par = get_parent(widget)
+                par.addChild(QTreeWidgetItem([widget.text(0), widget.text(1)]))
+                self.addTopLevelItem(par)
+                self.expandItem(par)
+                self.setCurrentItem(par)

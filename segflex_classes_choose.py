@@ -353,17 +353,25 @@ class classes_choose(QDialog):
                 return QTreeWidgetItem([item.text(0), item.text(1)])
             return get_parent(item.parent())
 
+        def struct(tree, item):
+            match = tree.findItems(item.text(1)[0], Qt.MatchStartsWith | Qt.MatchRecursive, 1)
+            if len(match) > 0:
+                match[0].parent().addChild(QTreeWidgetItem([item.text(0), item.text(1)]))
+                return 1
+            return 0
+
         it = self.tree_all_class.currentItem()
         if self.tree_all_class.indexOfTopLevelItem(it) >= 0:
             return
         text = it.text(1) + '_' + it.text(0)
         if text not in classifier.current_project.classes:
             classifier.current_project.classes.append(text)
-            par = get_parent(it)
-            par.addChild(QTreeWidgetItem([it.text(0), it.text(1)]))
-            self.tree_selected_class.addTopLevelItem(par)
-            self.tree_selected_class.expandItem(par)
-            self.tree_selected_class.setCurrentItem(par)
+            if struct(self.tree_selected_class, it) == 0:
+                par = get_parent(it)
+                par.addChild(QTreeWidgetItem([it.text(0), it.text(1)]))
+                self.tree_selected_class.addTopLevelItem(par)
+                self.tree_selected_class.expandItem(par)
+                self.tree_selected_class.setCurrentItem(par)
 
     def on_btn_remove(self):
         it = self.tree_selected_class.currentItem()
@@ -371,10 +379,17 @@ class classes_choose(QDialog):
             return
         if it.parent() is None:
             ind = self.tree_selected_class.indexOfTopLevelItem(it)
-            text = it.child(0).text(1) + '_' + it.child(0).text(0)
-        else:
-            ind = self.tree_selected_class.indexOfTopLevelItem(it.parent())
-            text = it.text(1) + '_' + it.text(0)
-        if text in classifier.current_project.classes:
-            classifier.current_project.classes.remove(text)
+            for i in range(it.childCount()):
+                text = it.child(i).text(1) + '_' + it.child(i).text(0)
+                if text in classifier.current_project.classes:
+                    classifier.current_project.classes.remove(text)
             self.tree_selected_class.takeTopLevelItem(ind)
+        else:
+            text = it.text(1) + '_' + it.text(0)
+            if text in classifier.current_project.classes:
+                classifier.current_project.classes.remove(text)
+                if it.parent().childCount() <= 1:
+                    ind = self.tree_selected_class.indexOfTopLevelItem(it.parent())
+                    self.tree_selected_class.takeTopLevelItem(ind)
+                    return
+                it.parent().removeChild(it)
