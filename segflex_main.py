@@ -25,8 +25,8 @@ class main_window(QMainWindow):
     def init_ui(self):
         self.adjust_main_window()
         self.check_create_projects_folder()
-        self.create_layouts()
-        self.fill_layouts()
+        self.init_layouts()
+        self.init_widgets()
         self.set_layouts()
         self.place_widgets()
         self.connect_ui()
@@ -35,21 +35,21 @@ class main_window(QMainWindow):
     def adjust_main_window(self):
         self.main_frame = QFrame()
         self.setCentralWidget(self.main_frame)
-        self.setWindowTitle("Segmentation app. 0.8")
+        self.setWindowTitle("Segmentation app. 0.9")
         self.resize(1000, 400)
 
     def check_create_projects_folder(self):
         if not os.path.exists(classifier.PROJECTS_FOLDER_FULL_NAME):
             os.mkdir(classifier.PROJECTS_FOLDER_FULL_NAME)
 
-    def create_layouts(self):
+    def init_layouts(self):
         self.main_layout = QGridLayout()
         self.tab_projects_layout = QVBoxLayout()
         self.tab_tasks_left_layout = QVBoxLayout()
         self.tab_tasks_right_layout = QVBoxLayout()
         self.btn_group_open_layout = QVBoxLayout()
 
-    def fill_layouts(self):
+    def init_widgets(self):
         self.init_table()
         self.init_btns()
 
