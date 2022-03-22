@@ -8,8 +8,6 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
 
 import segflex_new_project
 import segflex_project_as_widget as project
-import segflex_task_as_widget_to_do as task_todo
-import segflex_task_as_widget_to_check as task_tocheck
 import segflex_task_as_widget as task_base
 import os
 import json

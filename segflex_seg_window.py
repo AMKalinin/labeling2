@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
 
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygon
 
+import segflex_mask_as_object as mask
 import os
 import h5py
 import numpy as np
@@ -115,6 +116,14 @@ class seg_window(QDialog):
         polygon_icon.addPixmap(QPixmap(classifier.ICON_POLYGON_TBTN_DRAW_INSTRUMENT_FULL))
         self.polygon_btn.setIcon(polygon_icon)
 
+        self.rect_btn = QToolButton()
+        self.rect_btn.setCheckable(True)
+        self.rect_btn.setChecked(False)
+        polygon_icon = QIcon()
+        polygon_icon.addPixmap(QPixmap(classifier.ICON_POLYGON_TBTN_DRAW_INSTRUMENT_FULL))
+        self.rect_btn.setIcon(polygon_icon)
+
+
         self.cancel_btn = QToolButton()
         self.cancel_btn.setEnabled(False)
         cancel_icon = QIcon()
@@ -129,11 +138,13 @@ class seg_window(QDialog):
 
         drawing_instrument_bar.addWidget(self.pencil_btn)
         drawing_instrument_bar.addWidget(self.polygon_btn)
+        drawing_instrument_bar.addWidget(self.rect_btn)
         drawing_instrument_bar.addWidget(self.cancel_btn)
         drawing_instrument_bar.addWidget(self.save_to_attrs_btn)
 
         self.pencil_btn.toggled["bool"].connect(self.CDIB_on_pencil_btn)
         self.polygon_btn.toggled["bool"].connect(self.CDIB_on_polygon_btn)
+        self.rect_btn.toggled["bool"].connect(self.CDIB_on_rect_btn)
         self.cancel_btn.clicked.connect(self.CDIB_on_cancel_btn)
         self.save_to_attrs_btn.clicked.connect(self.CDIB_on_save_to_attrs_btn)
 
@@ -150,7 +161,23 @@ class seg_window(QDialog):
 
     def CDIB_on_polygon_btn(self, checked):
         if checked:
+            self.rect_btn.setChecked(False)
             self.display.mode = 'draw polygon'
+            self.display.maska = mask.polygon_mask()
+            self.cancel_btn.setEnabled(True)
+            self.save_to_attrs_btn.setEnabled(True)
+            self.display.repaint()
+        if not checked:
+            self.CDIB_discard_drawing()
+            self.display.update_base(self.display.base_pixmap)
+            self.cancel_btn.setEnabled(False)
+            self.save_to_attrs_btn.setEnabled(False)
+
+    def CDIB_on_rect_btn(self, checked):
+        if checked:
+            self.polygon_btn.setChecked(False)
+            self.display.mode = 'draw rect'
+            self.display.maska = mask.rectangle_mask()
             self.cancel_btn.setEnabled(True)
             self.save_to_attrs_btn.setEnabled(True)
             self.display.repaint()
@@ -174,7 +201,7 @@ class seg_window(QDialog):
 
     def CDIB_on_save_to_attrs_btn(self):
         message = QMessageBox()
-        if not self.display.new_polygon_points:
+        if not self.display.maska.points:
             message.setText("No points in new polygon!")
             message.exec_()
         else:#
@@ -190,7 +217,7 @@ class seg_window(QDialog):
                 if image_srcs.attrs[classifier.HDF_TASK_STATUS] == classifier.HDF_TASK_STATUS_0:
                     image_srcs.attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_1 #изменение статуса туду - ин ворк
                     print("changed status")
-            self.display.new_polygon_points.clear() #
+            self.display.maska.points.clear() #
             self.display.mode = 'display mask'
             #self.display.repaint()
             self.CCB_parse_current_image_attrs()
@@ -198,7 +225,7 @@ class seg_window(QDialog):
             message.exec_()
 
     def CDIB_prepare_coords_string_for_saving(self):
-        base = str(self.display.new_polygon_points)
+        base = str(self.display.maska.points)
         rtn = re.sub(r'PyQt5.QtCore.QPoint', '', base) 
         #print(rtn)
 
