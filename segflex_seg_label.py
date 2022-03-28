@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygon
 
 import segflex_mask_as_object as mask
+from segflex_lable_dialog import drawing_dialog as dialog
 
 import os
 import h5py
@@ -57,41 +58,46 @@ class Label(QLabel):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             if self.mode == 'draw polygon':
-                self.maska.add_points(event.pos())
-                #self.new_polygon = QPolygon(self.new_polygon_points)
-                self.update()
-                self.update_base(self.base_pixmap)
-
-            elif self.mode ==  'draw rect':
-                self.start_p = event.pos()
-
-            elif self.mode == 'move point':
                 self.index = None
-                bl, ind = self.maska.click_on_point(event.pos())
-                if bl:
-                    print(ind)
+                if not self.maska.points:
+                    flag = False
+                else:
+                    flag, ind = self.maska.click_on_point(event.pos())
+                if flag:
                     self.index = ind
+                else:
+                    self.maska.add_points(event.pos())
+                    self.update()
+                    self.update_base(self.base_pixmap)
 
-        if event.button() == Qt.RightButton:
-            if self.mode == 'draw polygon' or self.mode == 'draw rect':
-                self.mode = 'move point'
-            elif self.mode == 'move point':
-                if self.maska.type == 'polygon':
-                    self.mode = 'draw polygon'
-                elif self.maska.type == 'rectangle':
-                    self.mode = 'draw rect'
+            elif self.mode == 'draw rect':
+                self.index = None
+                if not self.maska.points:
+                    flag = False
+                else:
+                    flag, ind = self.maska.click_on_point(event.pos())
+                if flag:
+                    self.index = ind
+                else:
+                    self.start_p = event.pos()
 
     def mouseMoveEvent(self, event):
         if event.buttons() == Qt.LeftButton:
-            if self.mode == 'move point':
+            if self.mode == 'draw polygon':
                 if self.index is not None:
                     self.maska.setPoint(self.index, event.pos())
                     self.update()
                     self.update_base(self.base_pixmap)
+
             elif self.mode == 'draw rect':
-                self.maska.rectangle(self.start_p, event.pos())
-                self.update()
-                self.update_base(self.base_pixmap)
+                if self.index is not None:
+                    self.maska.setPoint(self.index, event.pos())
+                    self.update()
+                    self.update_base(self.base_pixmap)
+                else:
+                    self.maska.rectangle(self.start_p, event.pos())
+                    self.update()
+                    self.update_base(self.base_pixmap)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -108,9 +114,8 @@ class Label(QLabel):
         elif (self.mode == 'draw polygon') or (self.mode == 'move point') or (self.mode == 'draw rect'):
             pixmap = self.new_polygon_pixmap
             self.maska.draw(pixmap)
-            # self.new_polygon = self.maska.polygon
-            # painter3 = QPainter(pixmap)
-            # painter3.drawPolygon(self.maska.polygon)
         painter.drawPixmap(0, 0, pixmap)
 
-        
+    def select_lable(self):
+        self.lable_dialog = dialog(self)
+        self.lable_dialog.exec_()

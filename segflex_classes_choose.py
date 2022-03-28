@@ -237,6 +237,8 @@ class classes_choose(QDialog):
                 image_as_numpy = cv2.imread(image_path) # neef check for supporting formats
                 print(image_as_numpy.shape)
                 image_group.create_dataset(str(identifier), data=image_as_numpy)
+                image_group[str(identifier)].attrs[classifier.HDF_TASK_STATUS] = classifier.HDF_TASK_STATUS_0
+                image_group[str(identifier)].attrs[classifier.HDF_TASK_POLYGON_COUNT] = 0
                 #dataset = image_group.require_dataset(str(identifier)) добавление атрибутов в датасет???
                 identifier += 1
                 hdf.attrs[classifier.HDF_FILE_TASK_COUNT] += 1

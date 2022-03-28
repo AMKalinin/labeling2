@@ -31,7 +31,7 @@ class mask:
 class polygon_mask(mask):
     def __init__(self):
         super(polygon_mask, self).__init__()
-        self.type = 'polygon'
+        self.type = '<QPolygon>'
         self.polygon = QPolygon()
 
     def setPoint(self, ind, point):
@@ -53,7 +53,7 @@ class rectangle_mask(mask):
 
     def __init__(self):
         super(rectangle_mask, self).__init__()
-        self.type = 'rectangle'
+        self.type = '<QRect>'
         self.rect = QRect()
 
     def rectangle(self, p1, p2):

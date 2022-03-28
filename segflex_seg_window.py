@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
-                            QStatusBar, QMessageBox)
+                            QStatusBar, QMessageBox, QListWidget)
 
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygon
 
@@ -29,6 +29,8 @@ class seg_window(QDialog):
         self.images_dir = classifier.IMAGES_FOLDER_NAME_FULL
         self.instrument_name = "<QPolygon>"
         self.object_class = "__" + classifier.code_100[0] + "__"
+
+        self.list_object = QListWidget()
        
         self.adjust_window()
         self.open_image(self.identifier)
@@ -46,8 +48,10 @@ class seg_window(QDialog):
         self.show_existing_mask_button.setChecked(False)
         self.show_existing_mask_button.toggled["bool"].connect(self.CCB_on_show_existing_mask_button)
 
+        self.list_object.itemClicked.connect(self.selection_chenged)
         self.layout.addWidget(edit_btn, 1, 2)
-        self.layout.addWidget(self.show_existing_mask_button, 2, 2)
+        self.layout.addWidget(self.list_object, 2, 2)
+        self.layout.addWidget(self.show_existing_mask_button, 3, 2)
     
     def CCB_on_show_existing_mask_button(self, status):
         if status == True:
@@ -200,6 +204,7 @@ class seg_window(QDialog):
         self.display.repaint()
 
     def CDIB_on_save_to_attrs_btn(self):
+        self.display.select_lable()
         message = QMessageBox()
         if not self.display.maska.points:
             message.setText("No points in new polygon!")
@@ -211,7 +216,7 @@ class seg_window(QDialog):
                 current_attr_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
                 current_attr_index += 1
                 image_srcs.attrs[str(current_attr_index)] = (self.object_class + 
-                                                            self.instrument_name + 
+                                                            self.display.maska.type +
                                                             self.CDIB_prepare_coords_string_for_saving())
                 image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT] = str(current_attr_index)
                 if image_srcs.attrs[classifier.HDF_TASK_STATUS] == classifier.HDF_TASK_STATUS_0:
@@ -220,7 +225,8 @@ class seg_window(QDialog):
             self.display.maska.points.clear() #
             self.display.mode = 'display mask'
             #self.display.repaint()
-            self.CCB_parse_current_image_attrs()
+            #self.CCB_parse_current_image_attrs()
+            self.fill_table()
             message.setText("New polygon added to mask")
             message.exec_()
 
@@ -313,8 +319,35 @@ class seg_window(QDialog):
     def CNB_update_image_position_widget(self):
         self.image_position_widget.setText(str(self.current_image_position) + self.image_position_postfix)
 
+    def fill_table(self):
+        self.list_object.clear()
+        with h5py.File(self.project_path, 'r+') as hdf:
+            group_srcs = hdf[classifier.HDF_GROUP_SRCS_NAME]
+            image_srcs = group_srcs[str(self.identifier)]
+            current_object_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
 
-    def open_image(self, identifier): 
+            for index in range(1, current_object_index + 1):
+                polygon = QPolygon()
+                tmp_str1 = image_srcs.attrs[str(index)]
+                self.list_object.addItem(tmp_str1)
+
+
+    def selection_chenged(self, item):
+        self.display.update_base(self.display.base_pixmap)
+        #self.display.restore_srcs()
+        polygon = QPolygon()
+        tmp_str2 = re.sub(r' ', '', item.text())
+        tmp_list = re.findall(r'\([0-9]+,[0-9]+\)', tmp_str2)
+        tuple_list = []
+        for pair in tmp_list:
+            tuple_list.append(make_tuple(pair))
+        for int_pair in tuple_list:
+            polygon.append(QPoint(int_pair[0], int_pair[1]))
+
+        self.display.overlay_mask(polygon)
+
+    def open_image(self, identifier):
+
         self.clear_window_layout(self.image_layout)
         self.display = seg_label.Label()
         self.display.setFixedSize(600,600)
@@ -333,6 +366,7 @@ class seg_window(QDialog):
             image_as_pixmap = QPixmap(image_correct_rgb)
             self.display.update_base(image_as_pixmap)
             self.image_layout.addWidget(self.display)
+        self.fill_table()
 
 
     def adjust_window(self):
