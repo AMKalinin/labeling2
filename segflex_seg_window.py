@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QVBoxLayout, QGroupBox, QMainWindow, 
                             QPushButton, QHBoxLayout, QTabWidget, QWidget, QLabel, QDialog,
                             QPlainTextEdit, QLineEdit, QMenu,
                             QScrollArea, QToolButton, QSizePolicy, QComboBox, QToolBar, 
-                            QStatusBar, QMessageBox, QListWidget)
+                            QStatusBar, QMessageBox, QListWidget, QListWidgetItem, QTreeWidgetItem, QTreeWidget)
 
 from PyQt5.QtGui import QImage, QPixmap, QIcon, QPainter, QColor, QFont, QBrush, QPen, QPolygon
 
@@ -30,7 +30,12 @@ class seg_window(QDialog):
         self.instrument_name = "<QPolygon>"
         self.object_class = "__" + classifier.code_100[0] + "__"
 
-        self.list_object = QListWidget()
+        self.list_object = QTreeWidget()
+        self.list_object.setColumnCount(1)
+        self.list_object.setHeaderLabels(['Objects'])
+        self.item_tru = []
+
+        #self.list_object.setSelectionMode(QListWidget.MultiSelection)
        
         self.adjust_window()
         self.open_image(self.identifier)
@@ -48,7 +53,7 @@ class seg_window(QDialog):
         self.show_existing_mask_button.setChecked(False)
         self.show_existing_mask_button.toggled["bool"].connect(self.CCB_on_show_existing_mask_button)
 
-        self.list_object.itemClicked.connect(self.selection_chenged)
+        self.list_object.itemPressed.connect(self.change_select)
         self.layout.addWidget(edit_btn, 1, 2)
         self.layout.addWidget(self.list_object, 2, 2)
         self.layout.addWidget(self.show_existing_mask_button, 3, 2)
@@ -327,24 +332,44 @@ class seg_window(QDialog):
             current_object_index = int(image_srcs.attrs[classifier.HDF_TASK_POLYGON_COUNT])
 
             for index in range(1, current_object_index + 1):
-                polygon = QPolygon()
                 tmp_str1 = image_srcs.attrs[str(index)]
-                self.list_object.addItem(tmp_str1)
+                tmp = custom_tree_wdg([tmp_str1])
+                match = self.list_object.findItems(tmp.type_class[:6], Qt.MatchStartsWith, 0)
+                if  len(match) >0:
+                    match[0].addChild(tmp)
+                else:
+                    tmp2 = custom_tree_wdg([tmp_str1])
+                    tmp2.addChild(tmp)
+                    self.list_object.addTopLevelItem(tmp2)
+                    self.list_object.expandItem(tmp2)
+        self.list_object.sortItems(0,0)
 
 
-    def selection_chenged(self, item):
+    def change_select(self, item):
+        if item.parent() is None:
+            for i in range(item.childCount()):
+                self.change_select(item.child(i))
+            chld = item.takeChildren()
+            if all(it.checkState(0) == Qt.Checked for it in chld):
+                item.setCheckState(0, Qt.Checked)
+            else:
+                item.setCheckState(0, Qt.Unchecked)
+            item.addChildren(chld)
+
+        else:
+            if item.checkState(0) == Qt.Checked:
+                item.setCheckState(0, Qt.Unchecked)
+                self.item_tru.remove(item)
+            else:
+                item.setCheckState(0,Qt.Checked)
+                self.item_tru.append(item)
+
         self.display.update_base(self.display.base_pixmap)
-        #self.display.restore_srcs()
-        polygon = QPolygon()
-        tmp_str2 = re.sub(r' ', '', item.text())
-        tmp_list = re.findall(r'\([0-9]+,[0-9]+\)', tmp_str2)
-        tuple_list = []
-        for pair in tmp_list:
-            tuple_list.append(make_tuple(pair))
-        for int_pair in tuple_list:
-            polygon.append(QPoint(int_pair[0], int_pair[1]))
+        self.display.restore_srcs()
+        for it in self.item_tru:
+            if it.checkState(0) == Qt.Checked:
+                self.display.overlay_mask(it.polygon)
 
-        self.display.overlay_mask(polygon)
 
     def open_image(self, identifier):
 
@@ -380,3 +405,51 @@ class seg_window(QDialog):
     def clear_window_layout(self, layout):
         for i in reversed(range(layout.count())): 
             layout.itemAt(i).widget().setParent(None)
+
+
+class widg_item(QListWidgetItem):
+    def __init__(self, stroka):
+
+        self.polygon = QPolygon()
+        self.type_class = ''
+
+        tmp_str2 = re.sub(r' ', '', stroka)
+        for i in range(len(tmp_str2)):
+            if tmp_str2[i] == '<':
+                self.type_class = tmp_str2[:i]
+                break
+        tmp_list = re.findall(r'\([0-9]+,[0-9]+\)', tmp_str2)
+        tuple_list = []
+        for pair in tmp_list:
+            tuple_list.append(make_tuple(pair))
+        for int_pair in tuple_list:
+            self.polygon.append(QPoint(int_pair[0], int_pair[1]))
+
+        super().__init__(self.type_class)
+        self.setFlags(Qt.ItemIsUserCheckable)
+        self.setCheckState(Qt.Unchecked)
+        self.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
+
+
+class custom_tree_wdg(QTreeWidgetItem):
+    def __init__(self, stroka):
+        self.polygon = QPolygon()
+        self.type_class = ''
+
+        tmp_str2 = re.sub(r' ', '', stroka[0])
+        for i in range(len(tmp_str2)):
+            if tmp_str2[i] == '<':
+                self.type_class = tmp_str2[:i]
+                break
+        tmp_list = re.findall(r'\([0-9]+,[0-9]+\)', tmp_str2)
+        tuple_list = []
+        for pair in tmp_list:
+            tuple_list.append(make_tuple(pair))
+        for int_pair in tuple_list:
+            self.polygon.append(QPoint(int_pair[0], int_pair[1]))
+
+
+        super(custom_tree_wdg, self).__init__([self.type_class])
+        self.setFlags(Qt.ItemIsUserCheckable)
+        self.setCheckState(0,Qt.Unchecked)
+        self.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
