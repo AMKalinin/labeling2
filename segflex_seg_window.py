@@ -229,6 +229,8 @@ class seg_window(QDialog):
                     print("changed status")
             self.display.maska.points.clear() #
             self.display.mode = 'display mask'
+            self.display.update_base(self.display.base_pixmap)
+            self.display.restore_srcs()
             #self.display.repaint()
             #self.CCB_parse_current_image_attrs()
             self.fill_table()
@@ -363,7 +365,6 @@ class seg_window(QDialog):
             else:
                 item.setCheckState(0,Qt.Checked)
                 self.item_tru.append(item)
-
         self.display.update_base(self.display.base_pixmap)
         self.display.restore_srcs()
         for it in self.item_tru:
